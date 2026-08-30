@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentChatTitle.textContent = targetConv.title;
       personaSelect.value = targetConv.persona || 'general';
       activePersonaBadge.textContent = getPersonaLabel(targetConv.persona);
-      deleteThreadBtn.classList.remove('hidden');
+      deleteThreadBtn?.classList.remove('hidden');
     }
 
     // Load Messages
