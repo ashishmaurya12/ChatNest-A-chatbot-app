@@ -518,6 +518,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Create New Conversation Thread
   async function createNewConversation() {
+    // Instantly reset UI to clean starter screen
+    currentMessages = [];
+    activeConversationId = null;
+    currentChatTitle.textContent = 'New Chat';
+    if (emptyStateTemplate) {
+      chatLog.innerHTML = '';
+      chatLog.appendChild(emptyStateTemplate.cloneNode(true));
+      attachStarterCardListeners(chatLog);
+    }
+
     try {
       const currentPersona = personaSelect ? personaSelect.value : 'general';
       const res = await fetchWithAuth('/conversations', {
@@ -526,9 +536,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (data.success && data.conversation) {
-        conversations.unshift(data.conversation);
+        const existingIdx = conversations.findIndex(c => c._id === data.conversation._id);
+        if (existingIdx >= 0) {
+          conversations[existingIdx] = data.conversation;
+        } else {
+          conversations.unshift(data.conversation);
+        }
+        activeConversationId = data.conversation._id;
         renderThreadList();
-        selectConversation(data.conversation._id);
         sidebar?.classList.remove('open');
         sidebarOverlay?.classList.remove('active');
         showToast('Started new chat');

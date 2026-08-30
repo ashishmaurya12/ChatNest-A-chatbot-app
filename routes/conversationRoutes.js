@@ -29,11 +29,31 @@ router.get('/', async (req, res) => {
 });
 
 // @route   POST /api/conversations
-// @desc    Create a new conversation thread
+// @desc    Create a new conversation thread (reuses empty thread if one exists)
 // @access  Private
 router.post('/', async (req, res) => {
   try {
     const { title, persona } = req.body;
+
+    // Check if user already has an unused empty 'New Chat' conversation thread
+    const existingEmpty = await Conversation.findOne({
+      userId: req.user.id,
+      title: 'New Chat'
+    }).sort({ createdAt: -1 });
+
+    if (existingEmpty) {
+      const msgCount = await Message.countDocuments({ conversationId: existingEmpty._id });
+      if (msgCount === 0) {
+        if (persona && persona !== existingEmpty.persona) {
+          existingEmpty.persona = persona;
+          await existingEmpty.save();
+        }
+        return res.status(200).json({
+          success: true,
+          conversation: existingEmpty
+        });
+      }
+    }
 
     const conversation = await Conversation.create({
       userId: req.user.id,
