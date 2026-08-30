@@ -4,10 +4,10 @@ const { formatMemoriesForPrompt } = require('./memoryService');
 
 // Gemini model fallback candidates (tried in order on rate-limit / error)
 const GEMINI_MODEL_CANDIDATES = [
-  'gemini-3.6-flash',
-  'gemini-3.5-flash-lite',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash'
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash-8b'
 ];
 
 // Module-level Gemini client cache — avoids re-instantiation on every request
@@ -568,23 +568,23 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     return res;
   }
 
-  // 2. Explicit Gaali / Roast / Banter request
+  // 2. Uncensored Persona / Explicit Gaali / Roast / Banter request
+  const isUncensoredPersona = personaKey === 'uncensored';
   const isExplicitGaaliRequest = /gali\s*d[eo]|gaali\s*d[eo]|de\s*gaali|gali\s*do|gaali\s*do|mujhe\s*gaali|ek\s*gaali|koi\s*gaali/i.test(lower);
   const isProfanity = /\bfuck\b|\bbitch\b|\bchutiya\b|\bmadarchod\b|\bbhenchod\b|\bsaala\b|\bharami\b|\bkamina\b/i.test(lower);
-  const isGaaliMode = isExplicitGaaliRequest || lower.includes('gaali') || lower.includes('gali') || lower.includes('insult') || lower.includes('roast') || isProfanity;
+  const isGaaliMode = isUncensoredPersona || isExplicitGaaliRequest || lower.includes('gaali') || lower.includes('gali') || lower.includes('insult') || lower.includes('roast') || isProfanity;
 
   if (isGaaliMode) {
-    if (isExplicitGaaliRequest) {
-      // User explicitly asked for gaali — give them a spicy one! 😂
-      const gaali = GAALI_HINGLISH[roastIndex % GAALI_HINGLISH.length];
-      roastIndex++;
+    const gaali = GAALI_HINGLISH[roastIndex % GAALI_HINGLISH.length];
+    roastIndex++;
+    if (isExplicitGaaliRequest || isUncensoredPersona) {
       return gaali;
     }
     // General roast / banter
     const list = isHinglish ? ROAST_RESPONSES_HINGLISH : ROAST_RESPONSES_ENGLISH;
     const roast = list[roastIndex % list.length];
     roastIndex++;
-    return roast;
+    return `${gaali}\n\n${roast}`;
   }
 
 
