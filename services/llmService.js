@@ -581,23 +581,13 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     return res;
   }
 
-  // 2. Uncensored / Unfiltered Persona / Explicit Gaali / Roast / Banter request
+  // 2. Uncensored / Unfiltered Persona — STRICT RULE: ONLY give gaali if Unfiltered AI mode is selected!
   const isUncensoredPersona = personaKey === 'uncensored' || personaKey === 'unfiltered';
-  const isExplicitGaaliRequest = /gali\s*d[eo]|gaali\s*d[eo]|de\s*gaali|gali\s*do|gaali\s*do|mujhe\s*gaali|ek\s*gaali|koi\s*gaali/i.test(lower);
-  const isProfanity = /\bfuck\b|\bbitch\b|\bchutiya\b|\bmadarchod\b|\bbhenchod\b|\bsaala\b|\bharami\b|\bkamina\b/i.test(lower);
-  const isGaaliMode = isUncensoredPersona || isExplicitGaaliRequest || lower.includes('gaali') || lower.includes('gali') || lower.includes('insult') || lower.includes('roast') || isProfanity;
 
-  if (isGaaliMode) {
+  if (isUncensoredPersona) {
     const gaali = GAALI_HINGLISH[roastIndex % GAALI_HINGLISH.length];
     roastIndex++;
-    if (isExplicitGaaliRequest || isUncensoredPersona) {
-      return gaali;
-    }
-    // General roast / banter
-    const list = isHinglish ? ROAST_RESPONSES_HINGLISH : ROAST_RESPONSES_ENGLISH;
-    const roast = list[roastIndex % list.length];
-    roastIndex++;
-    return `${gaali}\n\n${roast}`;
+    return gaali;
   }
 
 
