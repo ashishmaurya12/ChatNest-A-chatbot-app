@@ -433,38 +433,19 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       }
     }
 
-    // ── NEWS / CURRENT EVENTS QUERY ──────────────────────────────────
-    if (isNewsQuery && cleanResults.length > 0) {
-      let res = '';
-      if (isHinglishLocal) {
-        res += `**Latest updates on "${prompt}":**\n\n`;
-        cleanResults.slice(0, 4).forEach((r, i) => {
-          res += `**${i + 1}. ${r.title}**\n${r.snippet.slice(0, 200)}${r.snippet.length > 200 ? '...' : ''}\n[Source](${r.url})\n\n`;
-        });
-      } else {
-        res += `**Here's what's happening with "${prompt}":**\n\n`;
-        cleanResults.slice(0, 4).forEach((r, i) => {
-          res += `**${i + 1}. ${r.title}**\n${r.snippet.slice(0, 200)}${r.snippet.length > 200 ? '...' : ''}\n[Source](${r.url})\n\n`;
-        });
+    // ── GENERAL / FACTUAL QUERY — Synthesize directly like ChatGPT-4o / Gemini AI ──
+    if (cleanResults.length > 0) {
+      let res = `### 💡 Direct Answer & Analysis: "${prompt}"\n\n`;
+      res += `${cleanResults[0].snippet}\n\n`;
+      if (cleanResults[1] && cleanResults[1].snippet) {
+        res += `### 🔑 Key Context & Impact\n`;
+        res += `${cleanResults[1].snippet}\n\n`;
+      }
+      if (cleanResults[2] && cleanResults[2].snippet) {
+        res += `- **Additional Factor**: ${cleanResults[2].snippet}\n\n`;
       }
       return res;
     }
-
-    // ── GENERAL / FACTUAL QUERY ──────────────────────────────────────
-    const topResult = cleanResults[0];
-    let res = '';
-    if (isHinglishLocal) {
-      res += `**${topResult.title}**\n\n${topResult.snippet}\n\n`;
-      cleanResults.slice(1, 3).forEach(r => {
-        res += `- **${r.title}**: ${r.snippet.slice(0, 150)}${r.snippet.length > 150 ? '...' : ''} [Link](${r.url})\n`;
-      });
-    } else {
-      res += `**${topResult.title}**\n\n${topResult.snippet}\n\n`;
-      cleanResults.slice(1, 3).forEach(r => {
-        res += `- **${r.title}**: ${r.snippet.slice(0, 150)}${r.snippet.length > 150 ? '...' : ''} [Link](${r.url})\n`;
-      });
-    }
-    return res;
   }
 
   // 1.5 Document Attachment Analysis (Offline / Smart Fallback)
@@ -1192,6 +1173,39 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       `- Over **40-45% of India's labor force** works in agriculture, yet the sector contributes only ~15-18% to total GDP.\n\n` +
       `### 🎯 4. Summary & Growth Outlook\n` +
       `India is a **macro-economic giant with micro-economic challenges**. Expanding manufacturing, formal employment, and digital infrastructure is key to elevating individual per-capita prosperity.`;
+  }
+
+  // 6.8.6 Current Account Deficit (CAD) & Rupee Impact
+  if (lower.includes('current account deficit') || (lower.includes('cad') && (lower.includes('rupee') || lower.includes('inr')))) {
+    if (isHinglish) {
+      return `### 📉 Current Account Deficit (CAD) Ka Indian Rupee (INR) Par Impact\n\n` +
+        `**Current Account Deficit (CAD)** tab hota hai jab India **imports (aayath)** ke liye zyada foreign currency (USD) pay karta hai jitna wo **exports (niryath)** se earn karta hai.\n\n` +
+        `### 🔑 CAD Kaise Rupee Ko Depreciate (Kamzor) Karta Hai:\n\n` +
+        `1. **USD ki Demand vs Rupee ki Supply**:\n` +
+        `   - Crude Oil, Gold, aur Electronics import karne ke liye Indian importers ko US Dollars ($) chahiye hote hain.\n` +
+        `   - Market me USD buy karne ke liye Rupees sell kiye jate hain, jisse **USD ki Demand badhti hai aur Rupee ki Value girti hai**.\n\n` +
+        `2. **Forex Reserves Pressure**:\n` +
+        `   - High CAD ko cover karne ke liye Central Bank (RBI) ko Forex Reserves se dollars market me release karne padte hain.\n` +
+        `   - Agar Capital Inflows (FDI/FPI) kam hon, toh RBI par pressure badhta hai aur Rupee fast depreciate hota hai.\n\n` +
+        `3. **Imported Inflation (Mehangai)**:\n` +
+        `   - Rupee kamzor hone se Crude Oil aur raw materials mehange ho jate hain, jisse domestic inflation badh jata hai.\n\n` +
+        `### 🎯 Summary & Key Takeaway:\n` +
+        `High CAD = More Dollar Demand = **Rupee Weakens (Depreciates against USD)**. Lower CAD ya high NRI Remittances & IT Exports Rupee ko stabilize karte hain.`;
+    }
+
+    return `### 📉 How India's Current Account Deficit (CAD) Affects the Rupee\n\n` +
+      `A **Current Account Deficit (CAD)** occurs when the total value of goods, services, and transfers imported by India exceeds the total value of items exported.\n\n` +
+      `### 🔑 Key Mechanisms: How CAD Weakens the Indian Rupee (INR)\n\n` +
+      `1. **Increased Demand for US Dollars ($)**:\n` +
+      `   - Indian importers need US Dollars to pay for crucial imports like crude oil, electronics, and gold.\n` +
+      `   - To buy dollars, importers sell Indian Rupees in foreign exchange markets. High CAD creates a **dollar shortage**, causing the Rupee to depreciate against the USD.\n\n` +
+      `2. **Pressure on Foreign Exchange Reserves**:\n` +
+      `   - To keep the currency stable, the Reserve Bank of India (RBI) sells USD from its Forex reserves.\n` +
+      `   - If capital inflows (FDI/FPI) cannot bridge the gap, foreign reserves deplete, leading to further currency depreciation.\n\n` +
+      `3. **Imported Inflation Cycle**:\n` +
+      `   - A weaker Rupee increases the domestic cost of imported crude oil and goods, triggering higher inflation across the economy.\n\n` +
+      `### 🎯 Bottom Line:\n` +
+      `A **widening CAD increases dollar demand**, causing the Rupee to **depreciate**. Conversely, strong IT services exports, NRI remittances, and lower oil prices reduce CAD and help stabilize the Rupee.`;
   }
 
   // 6.9 Artificial Intelligence (AI) & Machine Learning
