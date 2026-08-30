@@ -137,40 +137,59 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle Google Auth Click
+  // Handle Google Auth Click — Triggers Google Native Account Chooser
   const googleAuthBtn = document.getElementById('googleAuthBtn');
   if (googleAuthBtn) {
-    googleAuthBtn.addEventListener('click', async () => {
-      const emailPrompt = prompt('Enter your Gmail address for 1-Click Google Authentication:');
-      if (!emailPrompt || !emailPrompt.trim()) return;
-
-      const cleanEmail = emailPrompt.trim().toLowerCase();
-      const userName = cleanEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim() || 'Google User';
-
-      hideAlert();
-      setSubmitting(true);
-
-      try {
-        const response = await fetch('/api/auth/google', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: cleanEmail, name: userName })
+    googleAuthBtn.addEventListener('click', () => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            const emailPrompt = prompt('Select or enter your Gmail address for Google Sign-In:');
+            if (emailPrompt && emailPrompt.trim()) {
+              performEmailGoogleLogin(emailPrompt.trim());
+            }
+          }
         });
-        const data = await response.json();
-
-        if (data.success) {
-          setAuthToken(data.token);
-          setStoredUser(data.user);
-          showAlert(`Signed in as ${data.user.email}! Redirecting...`, 'success');
-          setTimeout(() => {
-            window.location.href = 'chat.html';
-          }, 800);
-        } else {
-          showAlert(data.error || 'Google authentication failed.', 'danger');
-          setSubmitting(false);
+      } else {
+        const emailPrompt = prompt('Select or enter your Gmail address for Google Sign-In:');
+        if (emailPrompt && emailPrompt.trim()) {
+          performEmailGoogleLogin(emailPrompt.trim());
         }
+      }
+    });
+  }
+
+  async function performEmailGoogleLogin(emailStr) {
+    const cleanEmail = emailStr.toLowerCase();
+    const userName = cleanEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim() || 'Google User';
+    hideAlert();
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, name: userName })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAuthToken(data.token);
+        setStoredUser(data.user);
+        showAlert(`Signed in as ${data.user.email}! Redirecting...`, 'success');
+        setTimeout(() => { window.location.href = 'chat.html'; }, 800);
+      } else {
+        showAlert(data.error || 'Google authentication failed.', 'danger');
+        setSubmitting(false);
+      }
+    } catch (e) {
+      console.error('Google Auth Error:', e);
+      showAlert('Network error during Google authentication.', 'danger');
+      setSubmitting(false);
+    }
+  }
+
   // Initialize Google Identity One-Tap Prompt
   function setupGoogleOneTap() {
-    if (window.google && window.google.accounts) {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
       try {
         window.google.accounts.id.initialize({
           client_id: '9876543210-chatnest.apps.googleusercontent.com',
@@ -201,5 +220,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  setTimeout(setupGoogleOneTap, 600);
+  setTimeout(setupGoogleOneTap, 400);
 });
