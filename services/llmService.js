@@ -1002,6 +1002,98 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     }
   }
 
+  // 6.7.6 NUMBER SERIES & SEQUENCE SOLVER ENGINE
+  const isSequenceQuery = lower.includes('next number') || lower.includes('sequence') || lower.includes('pattern') || lower.includes('series') || /[\d\s,]+[?_]/.test(prompt);
+  const numberMatches = prompt.match(/\b\d+\b/g);
+
+  if (isSequenceQuery && numberMatches && numberMatches.length >= 3) {
+    const numbers = numberMatches.map(Number);
+    const n = numbers.length;
+    
+    // Calculate differences between consecutive terms
+    const diffs = [];
+    for (let i = 0; i < n - 1; i++) {
+      diffs.push(numbers[i + 1] - numbers[i]);
+    }
+
+    // Calculate second differences
+    const diffDiffs = [];
+    for (let i = 0; i < diffs.length - 1; i++) {
+      diffDiffs.push(diffs[i + 1] - diffs[i]);
+    }
+
+    let nextNumber = null;
+    let patternExplanation = '';
+
+    // Case 1: Constant differences (Arithmetic Progression, e.g. 2, 5, 8, 11)
+    if (diffs.every(d => d === diffs[0])) {
+      const step = diffs[0];
+      nextNumber = numbers[n - 1] + step;
+      patternExplanation = `Each number increases by **+${step}**:\n- ${numbers.join(' ➔ ')} ➔ **${nextNumber}** (+${step})`;
+    }
+    // Case 2: Constant second differences (e.g., 2, 6, 12, 20, 30 -> diffs: 4, 6, 8, 10 -> diffs of diffs: +2)
+    else if (diffDiffs.length > 0 && diffDiffs.every(dd => dd === diffDiffs[0])) {
+      const stepIncrease = diffDiffs[0];
+      const nextDiff = diffs[diffs.length - 1] + stepIncrease;
+      nextNumber = numbers[n - 1] + nextDiff;
+      
+      patternExplanation = `The differences between consecutive numbers increase by **+${stepIncrease}** at each step:\n`;
+      for (let i = 0; i < diffs.length; i++) {
+        patternExplanation += `- ${numbers[i]} ➔ ${numbers[i + 1]} (Difference: **+${diffs[i]}**)\n`;
+      }
+      patternExplanation += `- Next difference = ${diffs[diffs.length - 1]} + ${stepIncrease} = **+${nextDiff}**\n`;
+      patternExplanation += `- Next term = ${numbers[n - 1]} + ${nextDiff} = **${nextNumber}**`;
+    }
+    // Case 3: Geometric Progression (e.g. 2, 4, 8, 16)
+    else if (n >= 3 && numbers[0] !== 0) {
+      const ratio = numbers[1] / numbers[0];
+      let isGeometric = true;
+      for (let i = 1; i < n - 1; i++) {
+        if (numbers[i + 1] / numbers[i] !== ratio) {
+          isGeometric = false;
+          break;
+        }
+      }
+      if (isGeometric) {
+        nextNumber = numbers[n - 1] * ratio;
+        patternExplanation = `Each number is multiplied by **×${ratio}**:\n- ${numbers.join(' ➔ ')} ➔ **${nextNumber}** (×${ratio})`;
+      }
+    }
+    // Case 4: Squares / Product n*(n+1)
+    if (nextNumber === null) {
+      let isNProduct = true;
+      for (let i = 0; i < n; i++) {
+        if (numbers[i] !== (i + 1) * (i + 2)) {
+          isNProduct = false;
+          break;
+        }
+      }
+      if (isNProduct) {
+        nextNumber = (n + 1) * (n + 2);
+        patternExplanation = `The $n$-th term is calculated as $n \\times (n + 1)$:\n`;
+        for (let i = 0; i < n; i++) {
+          patternExplanation += `- Term ${i + 1}: ${i + 1} × ${i + 2} = **${numbers[i]}**\n`;
+        }
+        patternExplanation += `- Term ${n + 1}: ${n + 1} × ${n + 2} = **${nextNumber}**`;
+      }
+    }
+
+    if (nextNumber !== null) {
+      if (isHinglish) {
+        return `### 🔢 Number Series Solution\n\n` +
+          `**Sequence**: \`${numbers.join(', ')}, ?\`\n\n` +
+          `### 🔑 Pattern Breakdown:\n${patternExplanation}\n\n` +
+          `### 🎯 Final Answer:\n` +
+          `The next number in the sequence is **${nextNumber}**!`;
+      }
+      return `### 🔢 Number Series Solution\n\n` +
+        `**Sequence**: \`${numbers.join(', ')}, ?\`\n\n` +
+        `### 🔑 Pattern Breakdown:\n${patternExplanation}\n\n` +
+        `### 🎯 Final Answer:\n` +
+        `The next number in the sequence is **${nextNumber}**!`;
+    }
+  }
+
   // 6.8 Economics & Finance Core Knowledge
   if (lower.includes('deficit') || lower.includes('budget deficit')) {
     if (isHinglish) {
