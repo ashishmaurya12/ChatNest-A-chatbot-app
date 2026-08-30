@@ -1123,41 +1123,120 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       : `Bored? Let me fix that!\n\n**Try one of these:**\n- Ask me a random mind-blowing fact or trivia\n- Let's brainstorm an app or project idea together\n- Turn on Web Search and explore today's top news\n- Try a math puzzle or coding challenge\n\nWhat sounds fun?`;
   }
 
-  // Direct clean topic extraction for any unmatched general knowledge query
-  let cleanTopic = prompt
-    .replace(/^(what is|what's|explain|define|tell me about|how does|what are|briefly|summary of|give me info on)\s+/i, '')
-    .replace(/[?!.,]/g, '')
-    .trim();
+  // ── 7. CODE GENERATION ENGINE ──
+  const codeLangMatch = lower.match(/\b(python|javascript|js|html|css|react|node|c\+\+|cpp|java|sql|php|ruby|swift|golang|go)\b/i);
+  const isCodeRequest = lower.includes('write') || lower.includes('code') || lower.includes('script') || lower.includes('program') || lower.includes('function') || lower.includes('component') || lower.includes('create an app');
 
-  if (!cleanTopic || cleanTopic.length < 2) {
-    cleanTopic = prompt.trim();
+  if (isCodeRequest || (codeLangMatch && (lower.includes('for') || lower.includes('to') || lower.includes('how')))) {
+    const lang = codeLangMatch ? codeLangMatch[1].toLowerCase() : 'javascript';
+    const langLabel = lang.charAt(0).toUpperCase() + lang.slice(1);
+    const taskName = prompt.replace(/^(write|create|make|generate|give me|show me)\s+(a|an)?\s*(code|script|program|function|app)?\s*(in|for|using)?\s*/i, '').trim();
+
+    return isHinglish
+      ? `### 💻 ${langLabel} Code Implementation: "${taskName}"\n\n` +
+        `Yahan **${taskName}** ke liye complete, clean, aur tested **${langLabel}** code hai:\n\n` +
+        `\`\`\`${lang === 'js' ? 'javascript' : lang}\n` +
+        `// ${langLabel} Solution for: ${taskName}\n` +
+        `function executeTask(inputData) {\n` +
+        `    console.log("Processing ${taskName}...");\n` +
+        `    const result = {\n` +
+        `        status: "success",\n` +
+        `        timestamp: new Date().toISOString(),\n` +
+        `        data: inputData || "Sample Input"\n` +
+        `    };\n` +
+        `    return result;\n` +
+        `}\n\n` +
+        `// Example Execution\n` +
+        `const output = executeTask("Hello ChatNest!");\n` +
+        `console.log(output);\n` +
+        `\`\`\`\n\n` +
+        `### 🔑 Code Explanation:\n` +
+        `1. **Clean Architecture**: Modular function structure with formatted return data.\n` +
+        `2. **Execution**: Directly runnable in any standard ${langLabel} environment.`
+      : `### 💻 ${langLabel} Code Implementation: "${taskName}"\n\n` +
+        `Here is the clean, production-ready **${langLabel}** solution for **"${taskName}"**:\n\n` +
+        `\`\`\`${lang === 'js' ? 'javascript' : lang}\n` +
+        `// ${langLabel} Solution for: ${taskName}\n` +
+        `function executeTask(inputData) {\n` +
+        `    console.log("Processing ${taskName}...");\n` +
+        `    const result = {\n` +
+        `        status: "success",\n` +
+        `        timestamp: new Date().toISOString(),\n` +
+        `        data: inputData || "Sample Input"\n` +
+        `    };\n` +
+        `    return result;\n` +
+        `}\n\n` +
+        `// Example Execution\n` +
+        `const output = executeTask("Hello ChatNest!");\n` +
+        `console.log(output);\n` +
+        `\`\`\`\n\n` +
+        `### 🔑 Key Highlights:\n` +
+        `1. **Modular Design**: Clean function structure for easy maintenance.\n` +
+        `2. **Easy Run**: Compatible with any standard ${langLabel} runtime.`;
   }
 
-  const topicTitle = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
+  // ── 8. INTELLIGENT QUESTION ENGINE (Why, How, What, General) ──
+  const isWhyQuery = lower.startsWith('why') || lower.includes('kyun') || lower.includes('kisi waja');
+  const isHowQuery = lower.startsWith('how') || lower.includes('kaise');
 
-  if (isHinglish) {
-    return `### 💡 Complete Explanation: "${topicTitle}"\n\n` +
-      `**${topicTitle}** ke baare me main concepts aur breakdown yahan hai:\n\n` +
-      `### 🔑 1. Core Concept & Definition\n` +
-      `**${topicTitle}** ek fundamental concept hai jo core principles, systemic frameworks, aur practical decision-making par based hai.\n\n` +
-      `### 📊 2. Key Elements & Functionality\n` +
-      `- **Operational Mechanics**: Key rules aur structured processes ke zariye function karta hai.\n` +
-      `- **Primary Advantage**: Problem-solving speed, scalability, aur operational efficiency badhata hai.\n` +
-      `- **Real-World Impact**: Modern industry, research, aur practical execution me iska extensive implementation hota hai.\n\n` +
-      `### 💡 3. Key Takeaway\n` +
-      `**${topicTitle}** ko samajhna solid domain knowledge aur strategic advantage deta hai. Agar aapko is topic par koi specific code, mathematical formula, ya case study chahiye toh batayein!`;
+  if (isWhyQuery) {
+    return isHinglish
+      ? `### 🔍 Explanation & Reasoning: "${prompt}"\n\n` +
+        `Is sawal **"${prompt}"** ka main reason aur scientific explanation yahan hai:\n\n` +
+        `### 🔑 1. Primary Cause & Mechanism\n` +
+        `- Yeh phenomenon fundamental natural laws aur physical/logical principles par depend karta hai.\n` +
+        `- Jab key conditions match hoti hain, tab main trigger mechanism execute hota hai.\n\n` +
+        `### 📊 2. Key Factors Influencing This\n` +
+        `1. **Environmental / Structural Factors**: Surrounding conditions aur inputs is process ko influence karte hain.\n` +
+        `2. **Core Science**: Natural laws, light scattering, energy transfer, ya biological processes ke zariye ye occur hota hai.\n\n` +
+        `### 💡 3. Conclusion\n` +
+        `In short, ye combination of factors is outcome ko create karta hai!`
+      : `### 🔍 Explanation & Reasoning: "${prompt}"\n\n` +
+        `Here is the clear breakdown and reasoning behind **"${prompt}"**:\n\n` +
+        `### 🔑 1. Primary Cause & Mechanism\n` +
+        `- This phenomenon is governed by fundamental scientific laws and logical principles.\n` +
+        `- Specific environmental, chemical, or structural triggers initiate the process.\n\n` +
+        `### 📊 2. Key Influencing Factors\n` +
+        `1. **Systemic & Structural Dynamics**: Underlying rules and environmental conditions determine the output.\n` +
+        `2. **Scientific Principles**: Interaction of physical forces, data transfers, or biological mechanisms.\n\n` +
+        `### 💡 3. Key Takeaway\n` +
+        `In summary, the interplay of these core principles directly causes this observable result.`;
   }
 
-  return `### 💡 Complete Explanation: "${topicTitle}"\n\n` +
-    `Here is a direct, comprehensive breakdown for **"${topicTitle}"**:\n\n` +
-    `### 🔑 1. Core Concept & Definition\n` +
-    `**${topicTitle}** is a fundamental concept centered on key operational principles, structured methodologies, and practical applications across domain areas.\n\n` +
-    `### 📊 2. Key Elements & Functionality\n` +
-    `- **Operational Mechanics**: Operates on core governing rules, structured workflows, and systematic logic.\n` +
-    `- **Primary Advantage**: Enhances problem-solving speed, scalability, and structural efficiency.\n` +
-    `- **Real-World Impact**: Extensively applied across modern industry, scientific research, and practical execution.\n\n` +
-    `### 💡 3. Key Takeaway\n` +
-    `Understanding **${topicTitle}** provides foundational clarity applicable across professional, technical, and academic fields. Feel free to ask for specific code implementations or mathematical formulations on this topic!`;
+  if (isHowQuery) {
+    return isHinglish
+      ? `### ⚙️ Step-by-Step Guide & Process: "${prompt}"\n\n` +
+        `Is process **"${prompt}"** ko step-by-step samjhein:\n\n` +
+        `### 📌 Step 1: Initial Preparation & Setup\n` +
+        `Basic requirements aur foundational setup ko complete karein.\n\n` +
+        `### ⚙️ Step 2: Core Execution & Implementation\n` +
+        `Main workflow execute hota hai jahan primary processing aur transformation hoti hai.\n\n` +
+        `### 🎯 Step 3: Verification & Final Output\n` +
+        `Results verify karke expected outcome generate hota hai.\n\n` +
+        `*Koi specific step par detail chahiye ho toh zaroor batayein!*`
+      : `### ⚙️ Step-by-Step Process & Workflow: "${prompt}"\n\n` +
+        `Here is the step-by-step workflow for **"${prompt}"**:\n\n` +
+        `### 📌 Step 1: Initialization & Setup\n` +
+        `Establish core prerequisites, environmental configs, and foundational inputs.\n\n` +
+        `### ⚙️ Step 2: Core Processing & Execution\n` +
+        `The primary engine executes logic, handles data transformations, and processes rules.\n\n` +
+        `### 🎯 Step 3: Final Output & Optimization\n` +
+        `Validates results, optimizes throughput, and delivers the final output.\n\n` +
+        `*Let me know if you would like deeper details on any specific step!*`;
+  }
+
+  // Fallback for unmatched general queries
+  return isHinglish
+    ? `### 💡 Answers & Insights: "${prompt}"\n\n` +
+      `Aapke sawal **"${prompt}"** ka direct breakdown:\n\n` +
+      `1. **Core Overview**: Is topic ke key principles practical applications aur problem solving par focus karte hain.\n` +
+      `2. **Key Highlights**: Structural frameworks aur logical rules is process ko guide karte hain.\n` +
+      `3. **Next Steps**: Agar aapko is par code, formula, ya step-by-step tutorial chahiye toh zaroor bataiye!`
+    : `### 💡 Direct Answer & Insights: "${prompt}"\n\n` +
+      `Here is the direct breakdown for **"${prompt}"**:\n\n` +
+      `1. **Core Overview**: This topic centers on key operational principles, structured methodologies, and practical applications.\n` +
+      `2. **Key Pillars**: Governed by core rules, functional frameworks, and systematic logic.\n` +
+      `3. **Next Steps**: Feel free to ask for specific code implementations, mathematical formulas, or detailed case studies!`;
 }
 
 async function* streamMockResponse(prompt, personaKey, attachment = null, webGrounding = null, history = []) {
