@@ -4,10 +4,14 @@ const { formatMemoriesForPrompt } = require('./memoryService');
 
 // Gemini model fallback candidates (tried in order on rate-limit / error)
 const GEMINI_MODEL_CANDIDATES = [
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
   'gemini-1.5-flash',
   'gemini-1.5-pro',
   'gemini-2.0-flash',
-  'gemini-1.5-flash-8b'
+  'gemini-2.5-flash-lite'
 ];
 
 // Module-level Gemini client cache — avoids re-instantiation on every request
