@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
     alertBox.classList.remove('hidden');
   };
 
+  const showAlertHTML = (htmlContent, type = 'danger') => {
+    if (!alertBox) return;
+    alertBox.innerHTML = htmlContent;
+    alertBox.className = `auth-alert alert-${type}`;
+    alertBox.classList.remove('hidden');
+  };
+
   const hideAlert = () => {
     if (!alertBox) return;
     alertBox.classList.add('hidden');
@@ -170,7 +177,42 @@ document.addEventListener('DOMContentLoaded', () => {
               window.location.href = 'chat.html';
             }, 800);
           } else {
-            showAlert(data.error || 'Authentication failed. Please check your credentials.');
+            if (data.allowReset) {
+              showAlertHTML(
+                `Incorrect password. <a id="resetPassLink" style="color:#818cf8; text-decoration:underline; font-weight:600; cursor:pointer;">Reset Password</a> or Sign in with Google.`
+              );
+              document.getElementById('resetPassLink')?.addEventListener('click', async () => {
+                const newPass = prompt('Enter your new password (at least 6 characters):');
+                if (!newPass || newPass.trim().length < 6) {
+                  alert('Password must be at least 6 characters long.');
+                  return;
+                }
+                setSubmitting(true);
+                try {
+                  const resetRes = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailCheckedState.email, newPassword: newPass.trim() })
+                  });
+                  const resetData = await resetRes.json();
+                  if (resetData.success) {
+                    setAuthToken(resetData.token);
+                    setStoredUser(resetData.user);
+                    showAlert('Password updated successfully! Redirecting...', 'success');
+                    setTimeout(() => { window.location.href = 'chat.html'; }, 800);
+                  } else {
+                    showAlert(resetData.error || 'Failed to update password.');
+                    setSubmitting(false);
+                  }
+                } catch (err) {
+                  console.error(err);
+                  showAlert('Network error resetting password.');
+                  setSubmitting(false);
+                }
+              });
+            } else {
+              showAlert(data.error || 'Authentication failed. Please check your credentials.');
+            }
             setSubmitting(false);
           }
         } catch (error) {

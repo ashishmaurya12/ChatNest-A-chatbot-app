@@ -165,15 +165,11 @@ router.post('/login', async (req, res) => {
 
     let isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      if (user.authProvider === 'google') {
-        // Automatically sync and update password for Google accounts when user enters a password
-        user.password = password;
-        user.authProvider = 'local';
-        await user.save();
-        isMatch = true;
-      } else {
-        return res.status(400).json({ success: false, error: 'Incorrect password. Access denied.' });
-      }
+      return res.status(400).json({
+        success: false,
+        error: 'Incorrect password. Please try again or reset your password.',
+        allowReset: true
+      });
     }
 
     const token = generateToken(user);
@@ -190,6 +186,47 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('[Auth Login Error]:', error);
     res.status(500).json({ success: false, error: 'Server error during login.' });
+  }
+});
+
+// @route   POST /api/auth/reset-password
+// @desc    Update password for registered user
+// @access  Public
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanEmail || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Email and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long.' });
+    }
+
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      return res.status(400).json({ success: false, error: 'Account not found.' });
+    }
+
+    user.password = newPassword;
+    user.authProvider = 'local';
+    await user.save();
+
+    const token = generateToken(user);
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('[Reset Password Error]:', error);
+    res.status(500).json({ success: false, error: 'Server error resetting password.' });
   }
 });
 
