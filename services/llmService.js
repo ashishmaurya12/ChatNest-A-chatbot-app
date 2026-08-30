@@ -1094,6 +1094,58 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     }
   }
 
+  // 6.7.7 RATE & WORK / CATS & MICE RIDDLE SOLVER ENGINE
+  if ((lower.includes('cat') && lower.includes('mic')) || (lower.includes('cat') && lower.includes('mouse')) || (lower.includes('man') && lower.includes('days')) || (lower.includes('worker') && lower.includes('hours'))) {
+    const numbers = prompt.match(/\b\d+\b/g);
+    if (numbers && numbers.length >= 4) {
+      const c1 = Number(numbers[0]);
+      const m1 = Number(numbers[1]);
+      const t1 = Number(numbers[2]);
+      const m2 = Number(numbers[3]);
+      const t2 = numbers.length >= 5 ? Number(numbers[4]) : t1;
+
+      const w2 = Math.round((c1 * t1 * m2) / (m1 * t2));
+
+      if (isHinglish) {
+        return `### 🐱 Logic Riddle & Rate Solution\n\n` +
+          `**Problem**: "${prompt}"\n\n` +
+          `### 🔑 Step-by-Step Logic:\n` +
+          `1. **Analyze Individual Rate**:\n` +
+          `   - **${c1} cats** catch **${m1} mice** in **${t1} minutes**.\n` +
+          `   - This means **1 cat** catches **1 mouse** in **${t1} minutes**.\n` +
+          `2. **Calculate Work over ${t2} minutes**:\n` +
+          `   - In ${t2} minutes, **1 cat** can catch $${t2} \\div ${t1} = ${(t2 / t1).toFixed(2)}$ mice.\n` +
+          `   - To catch **${m2} mice** in **${t2} minutes**:\n` +
+          `   $$\\text{Cats Needed} = \\frac{\\text{Total Mice}}{\\text{Mice per Cat}} = \\frac{${m2}}{${(t2 / t1).toFixed(2)}} = \\mathbf{${w2}}$$\n\n` +
+          `### 🎯 Final Answer:\n` +
+          `You still need **${w2} cats** to catch ${m2} mice in ${t2} minutes!`;
+      }
+
+      return `### 🐱 Logic Riddle & Rate Solution\n\n` +
+        `**Problem**: "${prompt}"\n\n` +
+        `### 🔑 Step-by-Step Logic:\n` +
+        `1. **Analyze Individual Rate**:\n` +
+        `   - **${c1} cats** catch **${m1} mice** in **${t1} minutes**.\n` +
+        `   - This means **1 cat** catches **1 mouse** in **${t1} minutes**.\n` +
+        `2. **Calculate Work over ${t2} minutes**:\n` +
+        `   - In ${t2} minutes, **1 cat** can catch $${t2} \\div ${t1} = ${(t2 / t1).toFixed(2)}$ mice.\n` +
+        `   - To catch **${m2} mice** in **${t2} minutes**:\n` +
+        `   $$\\text{Cats Needed} = \\frac{\\text{Total Mice}}{\\text{Mice per Cat}} = \\frac{${m2}}{${(t2 / t1).toFixed(2)}} = \\mathbf{${w2}}$$\n\n` +
+        `### 🎯 Final Answer:\n` +
+        `You need **${w2} cats** to catch ${m2} mice in ${t2} minutes!`;
+    }
+  }
+
+  // 6.7.8 Handle "solve qn", "solve this", "solve question", "solve it"
+  if (/^(solve qn|solve question|solve this|solve|solution|answer this|solve it)\b/i.test(prompt.trim())) {
+    const lastUserMsg = Array.isArray(history) && history.length > 0 ? history.filter(h => h.role === 'user').pop() : null;
+    const prevQuery = lastUserMsg ? lastUserMsg.content : '';
+
+    if (prevQuery) {
+      return generateSmartLocalResponse(prevQuery, personaKey, attachment, webGrounding, history.slice(0, -1));
+    }
+  }
+
   // 6.8 Economics & Finance Core Knowledge
   if (lower.includes('deficit') || lower.includes('budget deficit')) {
     if (isHinglish) {
