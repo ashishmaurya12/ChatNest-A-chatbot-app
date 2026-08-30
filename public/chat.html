@@ -13,7 +13,7 @@
   <!-- KaTeX Math Rendering CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=11.0.0">
+  <link rel="stylesheet" href="css/style.css?v=12.0.0">
 </head>
 <body class="chat-app">
 
@@ -94,18 +94,12 @@
 
       <!-- User Profile Footer -->
       <div class="sidebar-footer">
-        <div class="user-profile" id="userProfile" title="Click to open Settings & Account">
+        <div class="user-profile" id="userProfile" title="Click to open Settings & Account" style="width: 100%;">
           <div id="userAvatar" class="user-avatar">U</div>
           <div class="user-info">
             <div id="userName" class="user-name">Loading...</div>
             <div id="userEmail" class="user-email">...</div>
           </div>
-        </div>
-
-        <div class="footer-actions">
-          <button id="exportChatBtn" class="icon-btn" title="Export Chat History">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
         </div>
       </div>
     </aside>
@@ -302,9 +296,13 @@
           <span id="settingsFooterLocation">Delhi, India</span>
           <small>From your network context</small>
         </div>
-        <div class="settings-logout-container" style="padding: 0.85rem 1rem; border-top: 1px solid var(--border-color); margin-top: auto;">
-          <button type="button" id="modalLogoutBtn" class="settings-logout-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 0.85rem; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease;" title="Log Out of ChatNest">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <div class="settings-logout-container" style="padding: 0.85rem 1rem; border-top: 1px solid var(--border-color); margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem;">
+          <button type="button" id="modalExportBtn" class="settings-action-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.55rem 0.85rem; border-radius: var(--radius-md); background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 500; font-size: 0.825rem; cursor: pointer; transition: all 0.2s ease;" title="Export Chat History">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export Chat Data</span>
+          </button>
+          <button type="button" id="modalLogoutBtn" class="settings-logout-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.55rem 0.85rem; border-radius: var(--radius-md); background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 600; font-size: 0.825rem; cursor: pointer; transition: all 0.2s ease;" title="Log Out of ChatNest">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             <span>Log Out</span>
           </button>
         </div>
@@ -485,7 +483,7 @@
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
   <!-- App Scripts -->
-  <script src="js/api.js?v=11.0.0"></script>
-  <script src="js/chat.js?v=11.0.0"></script>
+  <script src="js/api.js?v=12.0.0"></script>
+  <script src="js/chat.js?v=12.0.0"></script>
 </body>
 </html>

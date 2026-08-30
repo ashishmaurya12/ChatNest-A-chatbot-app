@@ -333,8 +333,9 @@ document.addEventListener('DOMContentLoaded', () => {
     userProfileEl?.addEventListener('click', () => openSettingsModal());
     headerSettingsBtn?.addEventListener('click', () => openSettingsModal());
 
-    // Export Chat
+    // Export Chat Handlers
     exportChatBtn?.addEventListener('click', () => exportConversation());
+    document.getElementById('modalExportBtn')?.addEventListener('click', () => exportConversation());
 
     // Logout Button Handlers
     const performLogout = () => {
