@@ -336,13 +336,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Export Chat
     exportChatBtn?.addEventListener('click', () => exportConversation());
 
-    // Logout Button
-    logoutBtn?.addEventListener('click', () => {
+    // Logout Button Handlers
+    const performLogout = () => {
       if (confirm('Log out of ChatNest?')) {
         clearAuthToken();
         window.location.href = 'index.html';
       }
-    });
+    };
+    logoutBtn?.addEventListener('click', performLogout);
+    document.getElementById('modalLogoutBtn')?.addEventListener('click', performLogout);
   }
 
   // Handle File/Photo Selection
