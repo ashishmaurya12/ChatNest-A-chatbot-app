@@ -1366,54 +1366,37 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
         `2. **Easy Run**: Compatible with any standard ${langLabel} runtime.`;
   }
 
-  // ── 8. INTELLIGENT QUESTION ENGINE (Why, How, What, General) ──
-  const isWhyQuery = lower.startsWith('why') || lower.includes('kyun') || lower.includes('kisi waja');
-  const isHowQuery = lower.startsWith('how') || lower.includes('kaise');
+  // 6.8.7 RBI Inflation Control & Monetary Policy
+  if (lower.includes('reserve bank') || lower.includes('rbi') || lower.includes('inflation')) {
+    if (isHinglish) {
+      return `### 🏦 Reserve Bank of India (RBI) Inflation Control Kaise Karta Hai?\n\n` +
+        `**RBI** India ka central bank hai jo **Monetary Policy** ke zariye Inflation (Mehangai) ko control me rakhta hai (Target: **4% ± 2%**).\n\n` +
+        `### 🔑 RBI Ke Main Tools & Mechanisms:\n\n` +
+        `1. **Repo Rate Increase (Interest Rates Badhana)**:\n` +
+        `   - Jab inflation badhta hai, RBI Repo Rate ko badha deta hai. Commercial banks (SBI, HDFC) loans mehange kar dete hain.\n` +
+        `   - Loans mehange hone se log aur companies kam borrow karte hain, market me money supply kam hota hai aur inflation control me aata hai.\n\n` +
+        `2. **Cash Reserve Ratio (CRR) & Statutory Liquidity Ratio (SLR)**:\n` +
+        `   - CRR/SLR badhane se commercial banks ko RBI ke paas zyada cash hold karna padta hai, jisse unki lending capacity kam ho jati hai.\n\n` +
+        `3. **Open Market Operations (OMO)**:\n` +
+        `   - RBI market se excess liquidity absorb karne ke liye Government Securities (G-Secs) sell karta hai.\n\n` +
+        `### 🎯 Summary:\n` +
+        `High Inflation ➔ **Raise Repo Rate & CRR** ➔ Reduce Money Supply ➔ **Lower Consumer Demand** ➔ Inflation Normalizes!`;
+    }
 
-  if (isWhyQuery) {
-    return isHinglish
-      ? `### 🔍 Explanation & Reasoning: "${prompt}"\n\n` +
-        `Is sawal **"${prompt}"** ka main reason aur scientific explanation yahan hai:\n\n` +
-        `### 🔑 1. Primary Cause & Mechanism\n` +
-        `- Yeh phenomenon fundamental natural laws aur physical/logical principles par depend karta hai.\n` +
-        `- Jab key conditions match hoti hain, tab main trigger mechanism execute hota hai.\n\n` +
-        `### 📊 2. Key Factors Influencing This\n` +
-        `1. **Environmental / Structural Factors**: Surrounding conditions aur inputs is process ko influence karte hain.\n` +
-        `2. **Core Science**: Natural laws, light scattering, energy transfer, ya biological processes ke zariye ye occur hota hai.\n\n` +
-        `### 💡 3. Conclusion\n` +
-        `In short, ye combination of factors is outcome ko create karta hai!`
-      : `### 🔍 Explanation & Reasoning: "${prompt}"\n\n` +
-        `Here is the clear breakdown and reasoning behind **"${prompt}"**:\n\n` +
-        `### 🔑 1. Primary Cause & Mechanism\n` +
-        `- This phenomenon is governed by fundamental scientific laws and logical principles.\n` +
-        `- Specific environmental, chemical, or structural triggers initiate the process.\n\n` +
-        `### 📊 2. Key Influencing Factors\n` +
-        `1. **Systemic & Structural Dynamics**: Underlying rules and environmental conditions determine the output.\n` +
-        `2. **Scientific Principles**: Interaction of physical forces, data transfers, or biological mechanisms.\n\n` +
-        `### 💡 3. Key Takeaway\n` +
-        `In summary, the interplay of these core principles directly causes this observable result.`;
-  }
-
-  if (isHowQuery) {
-    return isHinglish
-      ? `### ⚙️ Step-by-Step Guide & Process: "${prompt}"\n\n` +
-        `Is process **"${prompt}"** ko step-by-step samjhein:\n\n` +
-        `### 📌 Step 1: Initial Preparation & Setup\n` +
-        `Basic requirements aur foundational setup ko complete karein.\n\n` +
-        `### ⚙️ Step 2: Core Execution & Implementation\n` +
-        `Main workflow execute hota hai jahan primary processing aur transformation hoti hai.\n\n` +
-        `### 🎯 Step 3: Verification & Final Output\n` +
-        `Results verify karke expected outcome generate hota hai.\n\n` +
-        `*Koi specific step par detail chahiye ho toh zaroor batayein!*`
-      : `### ⚙️ Step-by-Step Process & Workflow: "${prompt}"\n\n` +
-        `Here is the step-by-step workflow for **"${prompt}"**:\n\n` +
-        `### 📌 Step 1: Initialization & Setup\n` +
-        `Establish core prerequisites, environmental configs, and foundational inputs.\n\n` +
-        `### ⚙️ Step 2: Core Processing & Execution\n` +
-        `The primary engine executes logic, handles data transformations, and processes rules.\n\n` +
-        `### 🎯 Step 3: Final Output & Optimization\n` +
-        `Validates results, optimizes throughput, and delivers the final output.\n\n` +
-        `*Let me know if you would like deeper details on any specific step!*`;
+    return `### 🏦 How the Reserve Bank of India (RBI) Controls Inflation\n\n` +
+      `The **Reserve Bank of India (RBI)** uses its **Monetary Policy Framework** to maintain price stability, targeting a flexible consumer price inflation rate of **4% (with a tolerance band of ± 2%)**.\n\n` +
+      `### 🔑 Key Monetary Policy Tools Used by RBI:\n\n` +
+      `1. **Increasing the Repo Rate (Interest Rate Hiking)**:\n` +
+      `   - **Mechanism**: The Repo Rate is the rate at which RBI lends money to commercial banks.\n` +
+      `   - **Impact**: When RBI raises the Repo Rate, commercial banks increase home, auto, and business loan interest rates. Higher borrowing costs curb consumer spending and corporate investment, reducing overall demand and cooling inflation.\n\n` +
+      `2. **Cash Reserve Ratio (CRR) & Statutory Liquidity Ratio (SLR)**:\n` +
+      `   - **Mechanism**: CRR requires banks to hold a percentage of deposits in cash with RBI, while SLR requires holding liquid assets.\n` +
+      `   - **Impact**: Increasing CRR/SLR locks away liquidity from commercial banks, restricting their capacity to issue loans.\n\n` +
+      `3. **Open Market Operations (OMO)**:\n` +
+      `   - **Mechanism**: RBI sells Government Securities (G-Secs) in open financial markets.\n` +
+      `   - **Impact**: Sucks out excess liquidity from the banking system to curb demand-pull inflation.\n\n` +
+      `### 🎯 Bottom Line:\n` +
+      `High Inflation ➔ **RBI Hikes Repo Rate & CRR** ➔ Money Supply Contracts ➔ **Consumer Demand Cools** ➔ Price Inflation Stabilizes.`;
   }
 
   // Fallback for unmatched general queries
