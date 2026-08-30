@@ -1116,8 +1116,6 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     `### 💡 3. Key Takeaway\n` +
     `Understanding **${topicTitle}** provides foundational clarity applicable across professional, technical, and academic fields. Feel free to ask for specific code implementations or mathematical formulations on this topic!`;
 }
-}
-
 
 async function* streamMockResponse(prompt, personaKey, attachment = null, webGrounding = null, history = []) {
   const responseText = generateSmartLocalResponse(prompt, personaKey, attachment, webGrounding, history);
