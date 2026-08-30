@@ -959,6 +959,49 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     }
   }
 
+  // 6.7.5 Math & Speed / Distance / Time Word Problem Solver Engine
+  const distMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:km|kilometers?|miles?|m|meters?)/i);
+  const timeMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h|minutes?|mins?|seconds?|secs?)/i);
+  const isSpeedQuery = lower.includes('speed') || lower.includes('fast') || lower.includes('velocity') || lower.includes('calculate speed') || lower.includes('average speed');
+
+  if (distMatch && timeMatch && isSpeedQuery) {
+    const dist = parseFloat(distMatch[1]);
+    const time = parseFloat(timeMatch[1]);
+    const distStr = distMatch[0].trim();
+    const timeStr = timeMatch[0].trim();
+
+    if (time > 0) {
+      const speed = (dist / time).toFixed(2).replace(/\.00$/, '');
+      const isKm = /km|kilometer/i.test(distStr);
+      const isHr = /hour|hr|h\b/i.test(timeStr);
+      const unitStr = isKm ? (isHr ? 'km/h' : 'km/min') : (isHr ? 'mph' : 'm/s');
+
+      if (isHinglish) {
+        return `### 📐 Math Solution: Average Speed Calculation\n\n` +
+          `**Formula**: \`Average Speed = Total Distance ÷ Total Time\`\n\n` +
+          `### 🔑 Step-by-Step Solution:\n` +
+          `1. **Given Data**:\n` +
+          `   - Distance ($D$) = **${distStr}**\n` +
+          `   - Time ($T$) = **${timeStr}**\n\n` +
+          `2. **Calculation**:\n` +
+          `   $$\\text{Average Speed} = \\frac{${dist}}{${time}} = ${speed}\\text{ ${unitStr}}$$\n\n` +
+          `### 🎯 Final Answer:\n` +
+          `The average speed of the train is **${speed} ${unitStr}**!`;
+      }
+
+      return `### 📐 Math Solution: Average Speed Calculation\n\n` +
+        `**Formula**: \`Average Speed = Total Distance ÷ Total Time\`\n\n` +
+        `### 🔑 Step-by-Step Solution:\n` +
+        `1. **Given Data**:\n` +
+        `   - Distance ($D$) = **${distStr}**\n` +
+        `   - Time ($T$) = **${timeStr}**\n\n` +
+        `2. **Calculation**:\n` +
+        `   $$\\text{Average Speed} = \\frac{${dist}}{${time}} = ${speed}\\text{ ${unitStr}}$$\n\n` +
+        `### 🎯 Final Answer:\n` +
+        `The average speed is **${speed} ${unitStr}**!`;
+    }
+  }
+
   // 6.8 Economics & Finance Core Knowledge
   if (lower.includes('deficit') || lower.includes('budget deficit')) {
     if (isHinglish) {
