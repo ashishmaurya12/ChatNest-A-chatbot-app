@@ -97,6 +97,67 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/google
+// @desc    Authenticate or register user with Google Account
+// @access  Public
+router.post('/google', async (req, res) => {
+  try {
+    const { credential, email, name } = req.body;
+
+    let targetEmail = (email || '').toLowerCase();
+    let targetName = name || 'Google User';
+
+    // If Google ID token credential was sent, decode payload
+    if (credential) {
+      try {
+        const base64Url = credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        if (payload.email) targetEmail = payload.email.toLowerCase();
+        if (payload.name) targetName = payload.name;
+      } catch (e) {
+        console.warn('[Google Token Decode Warning]:', e.message);
+      }
+    }
+
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, error: 'Google email is required.' });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ email: targetEmail });
+    if (!user) {
+      const randomPass = Math.random().toString(36).slice(-10) + 'A1!';
+      user = await User.create({
+        name: targetName,
+        email: targetEmail,
+        password: randomPass
+      });
+    }
+
+    const token = generateToken(user);
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('[Google Auth Error]:', error);
+    res.status(500).json({ success: false, error: 'Server error during Google Authentication.' });
+  }
+});
+
 // @route   GET /api/auth/me
 // @desc    Get current user profile
 // @access  Private
