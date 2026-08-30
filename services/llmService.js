@@ -1420,24 +1420,51 @@ async function fetchUniversalKnowledge(topic) {
   try {
     if (!topic || topic.length < 2) return null;
 
-    const cleanTopic = topic
-      .replace(/^(what is|what's|explain|define|tell me about|how does|what are|who is|where is|when was|why is)\s+/i, '')
-      .replace(/[?!.,]/g, '')
-      .trim();
+    let cleanTopic = topic.trim();
+    let prev = '';
+    while (cleanTopic !== prev) {
+      prev = cleanTopic;
+      cleanTopic = cleanTopic
+        .replace(/^(what is|what's|explain|define|tell me about|how does|what are|who is|where is|when was|why is|how do|how can|how to|why does|origin of the|origin of|history of the|history of|causes of the|causes of|meaning of|concept of|types of|examples of|definition of|the|a|an)\s+/i, '')
+        .replace(/[?!.,]/g, '')
+        .trim();
+    }
 
-    if (!cleanTopic || cleanTopic.length < 2) return null;
+    if (!cleanTopic || cleanTopic.length < 2) cleanTopic = topic.trim();
 
-    const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTopic)}`;
-    const res = await fetch(wikiUrl, { headers: { 'User-Agent': 'ChatNest/1.0 (https://chatnest.app)' } });
+    // 1. Direct Summary Fetch
+    let wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTopic)}`;
+    let res = await fetch(wikiUrl, { headers: { 'User-Agent': 'ChatNest/1.0' } });
     if (res.ok) {
       const data = await res.json();
       if (data.type === 'standard' && data.extract && data.extract.length > 40) {
         return {
           title: data.title,
           description: data.description,
-          extract: data.extract,
-          thumbnail: data.thumbnail ? data.thumbnail.source : null
+          extract: data.extract
         };
+      }
+    }
+
+    // 2. Opensearch Fallback for complex questions/phrases
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(cleanTopic)}&limit=1&namespace=0&format=json`;
+    const searchRes = await fetch(searchUrl, { headers: { 'User-Agent': 'ChatNest/1.0' } });
+    if (searchRes.ok) {
+      const searchData = await searchRes.json();
+      if (searchData && searchData[1] && searchData[1][0]) {
+        const pageTitle = searchData[1][0];
+        const pageUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle)}`;
+        const pageRes = await fetch(pageUrl, { headers: { 'User-Agent': 'ChatNest/1.0' } });
+        if (pageRes.ok) {
+          const pageData = await pageRes.json();
+          if (pageData.extract && pageData.extract.length > 40) {
+            return {
+              title: pageData.title,
+              description: pageData.description,
+              extract: pageData.extract
+            };
+          }
+        }
       }
     }
   } catch (err) {
