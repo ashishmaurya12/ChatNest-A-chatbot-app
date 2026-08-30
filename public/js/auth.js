@@ -137,38 +137,57 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Handle Google Auth Click
-  // Handle Google Auth Click — Triggers Google Native Account Chooser
+  // Google Account Chooser Modal Setup
   const googleAuthBtn = document.getElementById('googleAuthBtn');
-  if (googleAuthBtn) {
+  const googleAccountModal = document.getElementById('googleAccountModal');
+  const closeGoogleModalBtn = document.getElementById('closeGoogleModalBtn');
+  const useAnotherGoogleBtn = document.getElementById('useAnotherGoogleBtn');
+
+  if (googleAuthBtn && googleAccountModal) {
     googleAuthBtn.addEventListener('click', () => {
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        window.google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            const emailPrompt = prompt('Select or enter your Gmail address for Google Sign-In:');
-            if (emailPrompt && emailPrompt.trim()) {
-              performEmailGoogleLogin(emailPrompt.trim());
-            }
-          }
-        });
-      } else {
-        const emailPrompt = prompt('Select or enter your Gmail address for Google Sign-In:');
-        if (emailPrompt && emailPrompt.trim()) {
-          performEmailGoogleLogin(emailPrompt.trim());
-        }
+      googleAccountModal.classList.remove('hidden');
+    });
+
+    closeGoogleModalBtn?.addEventListener('click', () => {
+      googleAccountModal.classList.add('hidden');
+    });
+
+    googleAccountModal.addEventListener('click', (e) => {
+      if (e.target === googleAccountModal) {
+        googleAccountModal.classList.add('hidden');
+      }
+    });
+
+    // Account items click handler
+    document.querySelectorAll('.google-account-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const email = item.getAttribute('data-email');
+        const name = item.getAttribute('data-name');
+        googleAccountModal.classList.add('hidden');
+        if (email) performEmailGoogleLogin(email, name);
+      });
+    });
+
+    // Use another account click
+    useAnotherGoogleBtn?.addEventListener('click', () => {
+      googleAccountModal.classList.add('hidden');
+      const emailPrompt = prompt('Enter your Gmail address to sign in:');
+      if (emailPrompt && emailPrompt.trim()) {
+        performEmailGoogleLogin(emailPrompt.trim());
       }
     });
   }
 
   const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail|googlemail)\.com$/i;
 
-  async function performEmailGoogleLogin(emailStr) {
+  async function performEmailGoogleLogin(emailStr, customName = null) {
     const cleanEmail = (emailStr || '').toLowerCase().trim();
     if (!GMAIL_REGEX.test(cleanEmail)) {
       showAlert('Invalid Gmail address! Please enter a valid @gmail.com account (e.g. name@gmail.com).', 'danger');
       return;
     }
 
-    const userName = cleanEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim() || 'Google User';
+    const userName = customName || cleanEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim() || 'Google User';
     hideAlert();
     setSubmitting(true);
     try {
@@ -193,39 +212,4 @@ document.addEventListener('DOMContentLoaded', () => {
       setSubmitting(false);
     }
   }
-
-  // Initialize Google Identity One-Tap Prompt
-  function setupGoogleOneTap() {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: '9876543210-chatnest.apps.googleusercontent.com',
-          auto_select: false,
-          callback: async (response) => {
-            if (response && response.credential) {
-              hideAlert();
-              setSubmitting(true);
-              const res = await fetch('/api/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ credential: response.credential })
-              });
-              const data = await res.json();
-              if (data.success) {
-                setAuthToken(data.token);
-                setStoredUser(data.user);
-                showAlert(`Signed in as ${data.user.email}! Redirecting...`, 'success');
-                setTimeout(() => { window.location.href = 'chat.html'; }, 800);
-              }
-            }
-          }
-        });
-        window.google.accounts.id.prompt();
-      } catch (e) {
-        console.warn('[Google One-Tap Warning]:', e);
-      }
-    }
-  }
-
-  setTimeout(setupGoogleOneTap, 400);
 });
