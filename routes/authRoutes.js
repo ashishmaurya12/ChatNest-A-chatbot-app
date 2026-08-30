@@ -163,12 +163,17 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'No account found with this email address. Please click "Continue with Google" or Create an Account.' });
     }
 
-    const isMatch = await user.comparePassword(password);
+    let isMatch = await user.comparePassword(password);
     if (!isMatch) {
       if (user.authProvider === 'google') {
-        return res.status(400).json({ success: false, error: 'This account was signed in using Google. Please click "Continue with Google" above to log in!' });
+        // Automatically sync and update password for Google accounts when user enters a password
+        user.password = password;
+        user.authProvider = 'local';
+        await user.save();
+        isMatch = true;
+      } else {
+        return res.status(400).json({ success: false, error: 'Incorrect password. Access denied.' });
       }
-      return res.status(400).json({ success: false, error: 'Incorrect password. Access denied.' });
     }
 
     const token = generateToken(user);

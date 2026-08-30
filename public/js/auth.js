@@ -42,6 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Toggle Show / Hide Password (Eye Button)
+  const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+  const passwordInput = document.getElementById('password');
+  const eyeIconShow = document.getElementById('eyeIconShow');
+  const eyeIconHide = document.getElementById('eyeIconHide');
+
+  if (togglePasswordBtn && passwordInput) {
+    togglePasswordBtn.addEventListener('click', () => {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      eyeIconShow?.classList.toggle('hidden');
+      eyeIconHide?.classList.toggle('hidden');
+    });
+  }
+
   // ChatGPT / Gemini Style 2-Step Single Form Auth State
   let currentAuthStep = 'email'; // 'email' | 'password'
   let emailCheckedState = { exists: false, isGoogle: false, email: '' };
