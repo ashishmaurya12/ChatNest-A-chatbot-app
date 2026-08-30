@@ -76,14 +76,16 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
       content: displayMessage
     });
 
-    // 2. Load recent conversation history — sorted ascending from DB (avoids in-memory reverse)
+    // 2. Load recent conversation history — most recent 20 messages (sorted chronologically for LLM context)
     const historyDocs = await Message.find({
       conversationId: conversation._id,
       _id: { $ne: userMsg._id } // exclude current user message
     })
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .limit(20)
       .lean();
+
+    historyDocs.reverse();
 
     const history = historyDocs.map(msg => {
       let cleanedContent = msg.content || '';

@@ -721,40 +721,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return row;
   }
 
-  // Parse Markdown & Add Code Block Headers
+  // Parse Markdown & Add Code Block Headers (Optimized String Engine)
   function parseMarkdown(text) {
     if (!window.marked) return escapeHtml(text);
-    const html = marked.parse(text);
-
-    // Wrap pre code blocks into customized code containers with language tags & copy buttons
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    tempDiv.querySelectorAll('pre').forEach(pre => {
-      const code = pre.querySelector('code');
-      let lang = 'code';
-      if (code && code.className) {
-        const match = code.className.match(/language-(\w+)/);
-        if (match) lang = match[1];
-      }
-
-      const wrapper = document.createElement('div');
-      wrapper.className = 'code-block-wrapper';
-      wrapper.innerHTML = `
-        <div class="code-header">
-          <span>${lang}</span>
-          <button class="copy-code-btn" type="button">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            <span>Copy Code</span>
-          </button>
-        </div>
-      `;
-
-      pre.parentNode.insertBefore(wrapper, pre);
-      wrapper.appendChild(pre);
-    });
-
-    return tempDiv.innerHTML;
+    try {
+      let html = marked.parse(text || '');
+      // Enhance pre code blocks into customized containers with language headers & copy buttons
+      html = html.replace(/<pre><code(?:\s+class="language-(\w+)")?>([\s\S]*?)<\/code><\/pre>/gi, (match, lang, codeContent) => {
+        const displayLang = lang || 'code';
+        return `<div class="code-block-wrapper">
+          <div class="code-header">
+            <span>${displayLang}</span>
+            <button class="copy-code-btn" type="button">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Code</span>
+            </button>
+          </div>
+          <pre><code class="${lang ? 'language-' + lang : ''}">${codeContent}</code></pre>
+        </div>`;
+      });
+      return html;
+    } catch (e) {
+      return escapeHtml(text);
+    }
   }
 
   // Code Block Copy Button Listener
