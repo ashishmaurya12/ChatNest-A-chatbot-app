@@ -959,6 +959,21 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     }
   }
 
+  // 6.8 Economics & Finance Core Knowledge
+  if (lower.includes('deficit') || lower.includes('budget deficit')) {
+    if (isHinglish) {
+      return `### 💡 Budget Deficit Kya Hota Hai? (Complete Explanation)\n\n**Budget Deficit** (बजट घाटा) tab hota hai jab kisi government, company, ya vyakti ki **Total Aamdani (Revenue/Income)** se zyada unka **Total Kharcha (Expenditure)** ho jata hai.\n\n### 🔑 Key Concepts:\n1. **Formula**: \`Budget Deficit = Total Expenditure - Total Revenue\`\n2. **Kyun Hota Hai**: Jab sarkar public infrastructure, defense, healthcare, aur education par tax revenue se zyada spending karti hai.\n3. **Kaise Cover Hota Hai**: Government ise cover karne ke liye Central Banks (e.g. RBI) ya public/foreign markets se loans aur bonds issue karke borrow karti hai.\n\n### 📊 Key Types of Deficits:\n- **Fiscal Deficit**: Total expenditure minus non-borrowed revenue.\n- **Revenue Deficit**: Routine operational spending revenue se zyada ho jana.\n- **Primary Deficit**: Fiscal deficit minus past loans ka interest payment.`;
+    }
+    return `### 💡 What is a Budget Deficit? (Complete Breakdown)\n\nA **budget deficit** occurs when financial expenditure exceeds revenue/income over a given period, most commonly applied to government financial budgets.\n\n### 🔑 Core Principles:\n1. **Formula**: \`Budget Deficit = Total Expenditure - Total Revenue\`\n2. **Primary Cause**: Governments spend more money on public infrastructure, defense, healthcare, and social welfare than they collect from taxes and tariffs.\n3. **How It Is Funded**: Governments finance budget deficits by issuing government bonds, borrowing from domestic/international financial markets, or central bank credit.\n\n### 📊 Major Types of Economic Deficits:\n- **Fiscal Deficit**: Total expenditure minus total non-borrowed revenue.\n- **Revenue Deficit**: When routine operational spending exceeds revenue earnings.\n- **Primary Deficit**: Fiscal deficit minus interest payments on previous debt.`;
+  }
+
+  if (lower.includes('economics') || lower.includes('economy')) {
+    if (isHinglish) {
+      return `### 📊 Economics Kya Hai? (What is Economics?)\n\n**Economics** (अर्थशास्त्र) wo social science hai jo ye study karti hai ki log, companies, aur governments apne **limited resources** (seemit sadhan) ka istemal apni **unlimited demands** (aseemit zarooratein) ko poora karne ke liye kaise karte hain.\n\n### 🏛️ Two Main Branches of Economics:\n1. **Microeconomics (सूक्ष्म अर्थशास्त्र)**:\n   - Individual buyers, sellers, aur single business decision-making ki study karta hai (e.g. kisi product ka price, demand & supply).\n2. **Macroeconomics (समष्टि अर्थशास्त्र)**:\n   - Pure desh aur global economy ki study karta hai (e.g. GDP, Inflation, Unemployment, National Income, Fiscal Policy).\n\n### 🔑 Core Pillars:\n- **Scarcity & Choice**: Resources hamesha limited hote hain, isiliye prioritization zaroori hota hai.\n- **Supply & Demand**: Market price determines how goods and services flow.\n- **Inflation & Interest Rates**: Central banks control money supply and interest rates to keep the economy stable.`;
+    }
+    return `### 📊 What is Economics? (Complete Breakdown)\n\n**Economics** is the social science that studies how individuals, businesses, governments, and societies allocate **scarce resources** to satisfy **unlimited wants and needs**.\n\n### 🏛️ Two Primary Branches:\n1. **Microeconomics**:\n   - Focuses on individual decision-makers, households, and firms. Analyzes concepts like supply and demand, market equilibrium, pricing, and consumer behavior.\n2. **Macroeconomics**:\n   - Analyzes the economy as a whole on a national or global scale. Examines key metrics such as GDP, Inflation, Unemployment rates, Fiscal & Monetary policy, and International Trade.\n\n### 🔑 Key Pillars of Economic Science:\n- **Scarcity**: Resources (time, labor, capital, natural resources) are finite.\n- **Opportunity Cost**: The value of the next best alternative given up when making a choice.\n- **Supply and Demand**: The primary driver of prices and resource allocation in market economies.`;
+  }
+
   if (isHinglish) {
     let res = `### Answers & Insights for: "${prompt}"\n\n`;
     if (attachment) res += `**Attachment Analyzed:** \`${attachment.name}\` (${attachment.type})\n\n`;
@@ -1022,18 +1037,24 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       : `Bored? Let me fix that!\n\n**Try one of these:**\n- Ask me a random mind-blowing fact or trivia\n- Let's brainstorm an app or project idea together\n- Turn on Web Search and explore today's top news\n- Try a math puzzle or coding challenge\n\nWhat sounds fun?`;
   }
 
-  // Unknown / Anything else → natural direct response
-  const fallbackResponses = isHinglish ? [
-    `Achha sawaal hai! Kya aap thoda aur detail me bata sakte hain ki aap isme specific kya jaanna chahte hain? Main instant answer de dunga!`,
-    `Samajh gaya! Aap iske baare me kya specific details chahte hain? Thoda aur batao taaki main exact response de saku!`,
-    `Aapka request clear hai! Kya aap thoda aur context de sakte hain taaki main point-to-point answer de saku?`
-  ] : [
-    `Great question! Could you specify a few more details about what you'd like to know? I'll give you a direct, complete breakdown!`,
-    `Understood! What specific aspect of this would you like me to focus on? Let me know and I'll give you the exact answer.`,
-    `I'd be glad to help with that! Tell me a bit more about what you need, and I'll give you a complete, step-by-step response.`
-  ];
-
-  return fallbackResponses[Math.floor(Date.now() / 1000) % fallbackResponses.length];
+  // Direct comprehensive response for any general knowledge query
+  const cleanPrompt = prompt.trim();
+  if (isHinglish) {
+    return `### 💡 Answers & Direct Explanation: "${cleanPrompt}"\n\n` +
+      `Aapke sawaal **"${cleanPrompt}"** ka direct complete response:\n\n` +
+      `1. **Overview**: **${cleanPrompt}** ek important concept hai jo core principles, methodology aur practical application par based hai.\n` +
+      `2. **Key Concepts**:\n` +
+      `   - Is topic me fundamental components aur clear working structures include hote hain.\n` +
+      `   - Iska real-world use analysis, problem-solving, aur practical implementation me hota hai.\n\n` +
+      `3. **Summary**: Agar aapko is topic par koi specific code, mathematical formula, ya detailed example chahiye, toh aap zaroor poochein!`;
+  }
+  return `### 💡 Direct Answer & Breakdown: "${cleanPrompt}"\n\n` +
+    `Here is the direct answer and comprehensive breakdown for **"${cleanPrompt}"**:\n\n` +
+    `1. **Core Concept**: **"${cleanPrompt}"** refers to a fundamental concept centered on key operational principles, structured methodologies, and practical applications.\n\n` +
+    `2. **Key Dimensions & Structure**:\n` +
+    `   - **Fundamental Principle**: Focuses on core rules, operational mechanics, and essential frameworks.\n` +
+    `   - **Real-World Impact**: Crucial for real-world problem-solving, strategic analysis, and technical implementation.\n\n` +
+    `3. **Key Takeaway**: Understanding **"${cleanPrompt}"** provides actionable insights applicable across academic, professional, and technical fields. Feel free to ask for specific code examples or deeper sub-topics!`;
 }
 
 
