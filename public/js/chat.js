@@ -327,10 +327,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Starter Prompt Cards
     attachStarterCardListeners(document);
 
-    // Settings Modal Open Trigger
-    const settingsBtn = document.getElementById('settingsBtn');
+    // Settings Modal Open Trigger (Account Profile Click & Header Settings)
+    const userProfileEl = document.getElementById('userProfile');
     const headerSettingsBtn = document.getElementById('headerSettingsBtn');
-    settingsBtn?.addEventListener('click', () => openSettingsModal());
+    userProfileEl?.addEventListener('click', () => openSettingsModal());
     headerSettingsBtn?.addEventListener('click', () => openSettingsModal());
 
     // Export Chat
