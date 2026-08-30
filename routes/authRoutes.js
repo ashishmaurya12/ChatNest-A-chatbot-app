@@ -14,8 +14,41 @@ const generateToken = (user) => {
   );
 };
 
+const dns = require('dns').promises;
+
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail|googlemail)\.com$/i;
+
+// Verify if an email domain has active MX (Mail Exchange) DNS records
+async function verifyRealEmailDomain(email) {
+  try {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!EMAIL_REGEX.test(cleanEmail)) return false;
+
+    const domain = cleanEmail.split('@')[1];
+    if (!domain) return false;
+
+    // Block obvious fake/disposable email domains
+    const DISPOSABLE_DOMAINS = [
+      'test.com', 'example.com', 'tempmail.com', 'mailinator.com', 'dispostable.com',
+      '10minutemail.com', 'asdf.com', 'qwerty.com', 'fake.com', 'dummy.com', 'trashmail.com'
+    ];
+    if (DISPOSABLE_DOMAINS.includes(domain)) return false;
+
+    // Fast-track common popular real domains
+    const TRUSTED_DOMAINS = [
+      'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.in', 'outlook.com',
+      'hotmail.com', 'icloud.com', 'protonmail.com', 'proton.me', 'live.com', 'zoho.com'
+    ];
+    if (TRUSTED_DOMAINS.includes(domain)) return true;
+
+    // Live DNS MX Lookup for custom domains
+    const mxRecords = await dns.resolveMx(domain);
+    return Array.isArray(mxRecords) && mxRecords.length > 0;
+  } catch (e) {
+    return false;
+  }
+}
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
@@ -30,6 +63,11 @@ router.post('/register', async (req, res) => {
 
     if (!EMAIL_REGEX.test(email.trim())) {
       return res.status(400).json({ success: false, error: 'Invalid email format. Please enter a valid email address.' });
+    }
+
+    const isRealEmail = await verifyRealEmailDomain(email);
+    if (!isRealEmail) {
+      return res.status(400).json({ success: false, error: 'This email domain does not exist or is invalid. Please use a real email address (e.g. name@gmail.com).' });
     }
 
     if (password.length < 6) {
@@ -79,6 +117,11 @@ router.post('/login', async (req, res) => {
 
     if (!EMAIL_REGEX.test(email.trim())) {
       return res.status(400).json({ success: false, error: 'Invalid email format.' });
+    }
+
+    const isRealEmail = await verifyRealEmailDomain(email);
+    if (!isRealEmail) {
+      return res.status(400).json({ success: false, error: 'Invalid or inactive email domain.' });
     }
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
@@ -139,6 +182,11 @@ router.post('/google', async (req, res) => {
 
     if (!targetEmail || !GMAIL_REGEX.test(targetEmail)) {
       return res.status(400).json({ success: false, error: 'Invalid Gmail address. Please enter a valid @gmail.com account.' });
+    }
+
+    const isRealEmail = await verifyRealEmailDomain(targetEmail);
+    if (!isRealEmail) {
+      return res.status(400).json({ success: false, error: 'This Gmail address is invalid or non-existent.' });
     }
 
     // Find or create user
