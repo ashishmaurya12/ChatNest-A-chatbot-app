@@ -525,10 +525,13 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ title: 'New Chat', persona: currentPersona })
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.conversation) {
         conversations.unshift(data.conversation);
         renderThreadList();
         selectConversation(data.conversation._id);
+        sidebar?.classList.remove('open');
+        sidebarOverlay?.classList.remove('active');
+        showToast('Started new chat');
       }
     } catch (e) {
       console.error('Error creating conversation:', e);
@@ -1045,6 +1048,21 @@ document.addEventListener('DOMContentLoaded', () => {
     closeSettingsBtn?.addEventListener('click', () => closeSettingsModal());
     backdrop?.addEventListener('click', () => closeSettingsModal());
 
+    // Settings Persona Select Handler
+    const settingsPersona = document.getElementById('settingsPersona');
+    settingsPersona?.addEventListener('change', async (e) => {
+      const newPersona = e.target.value;
+      if (personaSelect) personaSelect.value = newPersona;
+      activePersonaBadge.textContent = getPersonaLabel(newPersona);
+      showToast(`AI Persona updated to: ${getPersonaLabel(newPersona)}`);
+      if (activeConversationId) {
+        await fetchWithAuth(`/conversations/${activeConversationId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ persona: newPersona })
+        });
+      }
+    });
+
     // Temperature Slider
     tempSlider?.addEventListener('input', (e) => {
       if (tempValue) tempValue.textContent = e.target.value;
@@ -1138,6 +1156,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsModal = document.getElementById('settingsModal');
     if (settingsModal) {
       settingsModal.classList.remove('hidden');
+      const settingsPersona = document.getElementById('settingsPersona');
+      if (settingsPersona && personaSelect) {
+        settingsPersona.value = personaSelect.value || 'general';
+      }
       loadUserMemories();
       updateSessionStats();
     }
