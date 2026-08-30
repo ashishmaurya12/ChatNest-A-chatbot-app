@@ -126,12 +126,12 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(400).json({ success: false, error: 'Invalid credentials. User not found.' });
+      return res.status(400).json({ success: false, error: 'No account found with this email. Please register first or sign in with Google.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, error: 'Invalid credentials. Password incorrect.' });
+      return res.status(400).json({ success: false, error: 'Incorrect password. Access denied.' });
     }
 
     const token = generateToken(user);
