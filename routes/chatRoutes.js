@@ -51,8 +51,9 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
     let newTitle = null;
     const needsTitleUpdate = conversation.title === 'New Chat';
     if (needsTitleUpdate) {
-      newTitle = (rawMessage || processedAttachment?.name || 'New Chat').slice(0, 30);
-      if ((rawMessage || '').length > 30) newTitle += '...';
+      const cleanRaw = (rawMessage || processedAttachment?.name || 'New Chat').replace(/^[ "']+|[ "']+$|^"|"$/g, '').trim();
+      newTitle = cleanRaw.slice(0, 30);
+      if (cleanRaw.length > 30) newTitle += '...';
     }
 
     // Update conversation atomically (title, persona, updatedAt) — avoids load-mutate-save cycle

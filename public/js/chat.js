@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderThreadList(filterText = '') {
     threadListEl.innerHTML = '';
 
-    const filtered = conversations.filter(c => c.title.toLowerCase().includes(filterText));
+    const filtered = conversations.filter(c => (c.title || '').toLowerCase().includes(filterText));
 
     if (filtered.length === 0) {
       threadListEl.innerHTML = `<div class="sidebar-label" style="text-align:center; margin-top:1rem;">No chats found</div>`;
@@ -484,11 +484,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const fragment = document.createDocumentFragment();
 
     filtered.forEach(c => {
+      let cleanTitle = (c.title || 'New Chat').replace(/^[ "']+|[ "']+$|^"|"$/g, '').trim();
+      if (!cleanTitle) cleanTitle = 'New Chat';
+
       const item = document.createElement('div');
       item.className = `thread-item ${c._id === activeConversationId ? 'active' : ''}`;
       item.innerHTML = `
-        <span class="thread-title">${escapeHtml(c.title)}</span>
-        <button class="thread-delete-icon" title="Delete thread" data-id="${c._id}">
+        <div class="thread-item-content">
+          <svg class="thread-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="thread-title">${escapeHtml(cleanTitle)}</span>
+        </div>
+        <button class="thread-delete-icon" type="button" title="Delete thread" data-id="${c._id}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>
       `;
