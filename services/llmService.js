@@ -653,6 +653,57 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     return `### Is He a Good Politician? (Direct Analysis & Stance)\n\nWhether a politician is "good" depends heavily on a voter's priorities, ideology, and perspective on governance:\n\n1. **Key Strengths & Achievements (Pro-Viewpoint)**:\n   - **Grassroots Outreach**: The *Bharat Jodo Yatra* and *Bharat Jodo Nyay Yatra* significantly refreshed his public image, demonstrating endurance and connecting with citizens at scale.\n   - **Focused Messaging**: Consistently champions issues related to unemployment, inflation, economic inequality, and constitutional preservation.\n   - **Leader of Opposition Role**: As Leader of the Opposition in the Lok Sabha, he has energized the Opposition block to challenge government policies robustly.\n\n2. **Major Criticisms & Challenges (Counter-Viewpoint)**:\n   - **Electoral Performance**: Under his leadership, the Congress party faced significant national electoral losses in past general elections.\n   - **Strategic Consistency**: Critics often point to past periods of political inconsistency and organizational communication gaps.\n\n**Verdict**: As **Leader of the Opposition**, he plays a crucial democratic role in holding the ruling government accountable and representing millions of voters nationwide.`;
   }
 
+  // 6.3 Movie & IMDb Recommendations
+  const isMovieQuery = /movie|imdb|film|cinema|actor|actress|hollywood|bollywood|series|show|watch/i.test(lower);
+  if (isMovieQuery) {
+    if (isHinglish) {
+      return `### 🎬 Top 10 Highest Rated IMDb Movies of All Time\n\n` +
+        `1. **The Shawshank Redemption (1994)** — ⭐ **9.3/10**\n` +
+        `   - *Genre*: Drama | *Stars*: Tim Robbins, Morgan Freeman\n\n` +
+        `2. **The Godfather (1972)** — ⭐ **9.2/10**\n` +
+        `   - *Genre*: Crime, Drama | *Stars*: Marlon Brando, Al Pacino\n\n` +
+        `3. **The Dark Knight (2008)** — ⭐ **9.0/10**\n` +
+        `   - *Genre*: Action, Crime, Drama | *Stars*: Christian Bale, Heath Ledger\n\n` +
+        `4. **The Godfather Part II (1974)** — ⭐ **9.0/10**\n` +
+        `   - *Genre*: Crime, Drama | *Stars*: Al Pacino, Robert De Niro\n\n` +
+        `5. **12 Angry Men (1957)** — ⭐ **9.0/10**\n` +
+        `   - *Genre*: Crime, Drama | *Stars*: Henry Fonda, Lee J. Cobb\n\n` +
+        `6. **Schindler's List (1993)** — ⭐ **9.0/10**\n` +
+        `   - *Genre*: Biography, Drama, History | *Stars*: Liam Neeson, Ralph Fiennes\n\n` +
+        `7. **The Lord of the Rings: The Return of the King (2003)** — ⭐ **9.0/10**\n` +
+        `   - *Genre*: Action, Adventure, Drama | *Stars*: Elijah Wood, Viggo Mortensen\n\n` +
+        `8. **Pulp Fiction (1994)** — ⭐ **8.9/10**\n` +
+        `   - *Genre*: Crime, Drama | *Stars*: John Travolta, Samuel L. Jackson\n\n` +
+        `9. **The Lord of the Rings: The Fellowship of the Ring (2001)** — ⭐ **8.8/10**\n` +
+        `   - *Genre*: Action, Adventure, Drama | *Stars*: Elijah Wood, Ian McKellen\n\n` +
+        `10. **The Good, the Bad and the Ugly (1966)** — ⭐ **8.8/10**\n` +
+        `   - *Genre*: Western | *Stars*: Clint Eastwood, Eli Wallach\n\n` +
+        `**Recommendation**: **The Shawshank Redemption** aur **The Dark Knight** sabse top picks hain. Aap kis specific genre (Action, Thriller, Sci-Fi, Drama) ki movies dekhna chahte hain?`;
+    }
+    return `### 🎬 Top 10 Highest Rated IMDb Movies of All Time\n\n` +
+      `1. **The Shawshank Redemption (1994)** — ⭐ **9.3/10**\n` +
+      `   - *Genre*: Drama | *Stars*: Tim Robbins, Morgan Freeman\n\n` +
+      `2. **The Godfather (1972)** — ⭐ **9.2/10**\n` +
+      `   - *Genre*: Crime, Drama | *Stars*: Marlon Brando, Al Pacino\n\n` +
+      `3. **The Dark Knight (2008)** — ⭐ **9.0/10**\n` +
+      `   - *Genre*: Action, Crime, Drama | *Stars*: Christian Bale, Heath Ledger\n\n` +
+      `4. **The Godfather Part II (1974)** — ⭐ **9.0/10**\n` +
+      `   - *Genre*: Crime, Drama | *Stars*: Al Pacino, Robert De Niro\n\n` +
+      `5. **12 Angry Men (1957)** — ⭐ **9.0/10**\n` +
+      `   - *Genre*: Crime, Drama | *Stars*: Henry Fonda, Lee J. Cobb\n\n` +
+      `6. **Schindler's List (1993)** — ⭐ **9.0/10**\n` +
+      `   - *Genre*: Biography, Drama, History | *Stars*: Liam Neeson, Ralph Fiennes\n\n` +
+      `7. **The Lord of the Rings: The Return of the King (2003)** — ⭐ **9.0/10**\n` +
+      `   - *Genre*: Action, Adventure, Drama | *Stars*: Elijah Wood, Viggo Mortensen\n\n` +
+      `8. **Pulp Fiction (1994)** — ⭐ **8.9/10**\n` +
+      `   - *Genre*: Crime, Drama | *Stars*: John Travolta, Samuel L. Jackson\n\n` +
+      `9. **The Lord of the Rings: The Fellowship of the Ring (2001)** — ⭐ **8.8/10**\n` +
+      `   - *Genre*: Action, Adventure, Drama | *Stars*: Elijah Wood, Ian McKellen\n\n` +
+      `10. **The Good, the Bad and the Ugly (1966)** — ⭐ **8.8/10**\n` +
+      `   - *Genre*: Western | *Stars*: Clint Eastwood, Eli Wallach\n\n` +
+      `**Top Recommendation**: **The Shawshank Redemption** and **The Dark Knight** are absolute top-tier masterpieces. What genre are you in the mood for?`;
+  }
+
   // 6.4 Mobile Phone Recommendations — budget-aware
   const isPhoneQuery = /phone|mobile|smartphone|handset/i.test(lower) ||
     /list of (mobile|phone|smartphone)/i.test(lower) ||
@@ -971,15 +1022,15 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       : `Bored? Let me fix that!\n\n**Try one of these:**\n- Ask me a random mind-blowing fact or trivia\n- Let's brainstorm an app or project idea together\n- Turn on Web Search and explore today's top news\n- Try a math puzzle or coding challenge\n\nWhat sounds fun?`;
   }
 
-  // Unknown / Anything else → smart generic
+  // Unknown / Anything else → natural direct response
   const fallbackResponses = isHinglish ? [
-    `Interesting sawaal! Mujhe thoda aur context chahiye — kya aap thoda detail mein bata sakte hain ki exactly kya jaanna chahte hain?\n\nMain Science, Coding, Math, History, ya kuch bhi samjhane ke liye tayyar hoon!`,
-    `Hmm, yeh mujhe samajh mein nahi aaya bilkul. Kya aap dobaara poochh sakte hain thoda aur clearly?\n\nOr agar aap news chahte hain toh **Web Search** toggle on karein!`,
-    `Aapka sawaal sunke laga ki main aur jaan sakta hoon! Kya aap thoda aur explain kar sakte hain? Main poori koshish karunga best answer dene ki.`
+    `Achha sawaal hai! Kya aap thoda aur detail me bata sakte hain ki aap isme specific kya jaanna chahte hain? Main instant answer de dunga!`,
+    `Samajh gaya! Aap iske baare me kya specific details chahte hain? Thoda aur batao taaki main exact response de saku!`,
+    `Aapka request clear hai! Kya aap thoda aur context de sakte hain taaki main point-to-point answer de saku?`
   ] : [
-    `That's interesting! Could you give me a bit more context about what you're looking for?\n\nI can help with science, coding, math, history, or almost anything — just let me know!`,
-    `Hmm, I want to make sure I give you the best answer. Could you rephrase that a little more clearly?\n\nOr if you need live info, turn on **Web Search** in the header!`,
-    `I'd love to help with that! Could you tell me a little more about what you need? I'm ready to dive deep into any topic.`
+    `Great question! Could you specify a few more details about what you'd like to know? I'll give you a direct, complete breakdown!`,
+    `Understood! What specific aspect of this would you like me to focus on? Let me know and I'll give you the exact answer.`,
+    `I'd be glad to help with that! Tell me a bit more about what you need, and I'll give you a complete, step-by-step response.`
   ];
 
   return fallbackResponses[Math.floor(Date.now() / 1000) % fallbackResponses.length];
