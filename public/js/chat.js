@@ -641,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${avatarHtml}
       <div class="message-content-wrapper">
         <div class="message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'} ${isLiveStream ? 'streaming-cursor' : ''}">
-          ${isUser ? renderUserBubbleContent(content) : parseMarkdown(content)}
+          ${isUser ? renderUserBubbleContent(content) : (content ? parseMarkdown(content) : '<div class="streaming-dots-loader"><span class="dot dot-1"></span><span class="dot dot-2"></span><span class="dot dot-3"></span></div>')}
         </div>
         <div class="message-timestamp">${formattedTime}</div>
         ${!isUser && !isLiveStream ? `
