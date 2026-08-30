@@ -75,17 +75,21 @@ router.post('/register', async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
-    if (existingUser) {
-      return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (user) {
+      // Update password so user can log in via manual password as well
+      user.password = password;
+      if (name && name.trim()) user.name = name.trim();
+      user.authProvider = 'local';
+      await user.save();
+    } else {
+      user = await User.create({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password,
+        authProvider: 'local'
+      });
     }
-
-    // Create user
-    const user = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password
-    });
 
     const token = generateToken(user);
 
@@ -126,11 +130,14 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(400).json({ success: false, error: 'No account found with this email. Please register first or sign in with Google.' });
+      return res.status(400).json({ success: false, error: 'No account found with this email address. Please click "Continue with Google" or Create an Account.' });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      if (user.authProvider === 'google') {
+        return res.status(400).json({ success: false, error: 'This account was signed in using Google. Please click "Continue with Google" above to log in!' });
+      }
       return res.status(400).json({ success: false, error: 'Incorrect password. Access denied.' });
     }
 
@@ -196,7 +203,8 @@ router.post('/google', async (req, res) => {
       user = await User.create({
         name: targetName,
         email: targetEmail,
-        password: randomPass
+        password: randomPass,
+        authProvider: 'google'
       });
     }
 
