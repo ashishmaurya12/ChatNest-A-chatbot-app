@@ -50,6 +50,36 @@ async function verifyRealEmailDomain(email) {
   }
 }
 
+// @route   POST /api/auth/check-email
+// @desc    Check if email exists and is valid (ChatGPT / Gemini style 2-step auth)
+// @access  Public
+router.post('/check-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const cleanEmail = (email || '').trim().toLowerCase();
+
+    if (!cleanEmail || !EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+    }
+
+    const isRealEmail = await verifyRealEmailDomain(cleanEmail);
+    if (!isRealEmail) {
+      return res.status(400).json({ success: false, error: 'This email domain does not exist or is inactive. Please use a real email address (e.g. name@gmail.com).' });
+    }
+
+    const user = await User.findOne({ email: cleanEmail });
+    return res.json({
+      success: true,
+      exists: !!user,
+      authProvider: user ? user.authProvider : null,
+      email: cleanEmail
+    });
+  } catch (error) {
+    console.error('[Check Email Error]:', error);
+    res.status(500).json({ success: false, error: 'Server error checking email.' });
+  }
+});
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public

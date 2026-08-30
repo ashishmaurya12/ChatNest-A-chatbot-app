@@ -65,17 +65,21 @@
         <span style="flex: 1; border-bottom: 1px solid var(--border-color);"></span>
       </div>
 
-      <!-- Login / Signup Form -->
+      <!-- ChatGPT / Gemini Style 2-Step Single Form -->
       <form id="loginForm" class="auth-form" novalidate>
-        <div class="form-group">
+        <div class="form-group" id="emailGroup">
           <div class="input-wrapper">
             <input type="email" id="email" placeholder="Email address" required autocomplete="email" style="border-radius: 9999px; padding: 0.85rem 1.25rem;">
           </div>
         </div>
 
-        <div class="form-group" id="passwordGroup">
+        <div class="form-group hidden" id="passwordGroup">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; padding: 0 0.5rem;">
+            <span id="enteredEmailLabel" style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;"></span>
+            <button type="button" id="editEmailBtn" style="background: none; border: none; color: #818cf8; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: underline;">Edit</button>
+          </div>
           <div class="input-wrapper">
-            <input type="password" id="password" placeholder="Password" required autocomplete="current-password" style="border-radius: 9999px; padding: 0.85rem 1.25rem;">
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password" style="border-radius: 9999px; padding: 0.85rem 1.25rem;">
           </div>
         </div>
 

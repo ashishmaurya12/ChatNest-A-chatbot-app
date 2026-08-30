@@ -42,96 +42,127 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Handle Login Submission
+  // ChatGPT / Gemini Style 2-Step Single Form Auth State
+  let currentAuthStep = 'email'; // 'email' | 'password'
+  let emailCheckedState = { exists: false, isGoogle: false, email: '' };
+
+  const emailGroup = document.getElementById('emailGroup');
+  const passwordGroup = document.getElementById('passwordGroup');
+  const enteredEmailLabel = document.getElementById('enteredEmailLabel');
+  const editEmailBtn = document.getElementById('editEmailBtn');
+  const submitBtnText = document.getElementById('submitBtn')?.querySelector('.btn-text');
+
+  if (editEmailBtn) {
+    editEmailBtn.addEventListener('click', () => {
+      currentAuthStep = 'email';
+      passwordGroup?.classList.add('hidden');
+      emailGroup?.classList.remove('hidden');
+      if (submitBtnText) submitBtnText.textContent = 'Continue';
+      hideAlert();
+    });
+  }
+
+  // Handle ChatGPT / Gemini 2-Step Form Submission
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideAlert();
 
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const email = emailInput ? emailInput.value.trim() : '';
 
-      if (!email || !password) {
-        showAlert('Please fill in all fields.');
-        return;
-      }
+      // STEP 1: Verify & Check Email (ChatGPT style)
+      if (currentAuthStep === 'email') {
+        if (!email) {
+          showAlert('Please enter your email address.');
+          return;
+        }
 
-      setSubmitting(true);
+        setSubmitting(true);
+        try {
+          const res = await fetch('/api/auth/check-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          setSubmitting(false);
 
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+          if (!data.success) {
+            showAlert(data.error || 'Please enter a valid email address.');
+            return;
+          }
 
-        const data = await response.json();
+          emailCheckedState = data;
+          currentAuthStep = 'password';
 
-        if (data.success) {
-          setAuthToken(data.token);
-          setStoredUser(data.user);
-          showAlert('Login successful! Redirecting...', 'success');
-          setTimeout(() => {
-            window.location.href = 'chat.html';
-          }, 800);
-        } else {
-          showAlert(data.error || 'Login failed. Please check your credentials.');
+          emailGroup?.classList.add('hidden');
+          passwordGroup?.classList.remove('hidden');
+
+          if (enteredEmailLabel) enteredEmailLabel.textContent = data.email;
+
+          if (data.exists) {
+            if (submitBtnText) submitBtnText.textContent = 'Sign In';
+            passwordInput?.focus();
+          } else {
+            if (submitBtnText) submitBtnText.textContent = 'Create Account & Continue';
+            showAlert('New to ChatNest? Create a password to set up your account.', 'info');
+            passwordInput?.focus();
+          }
+        } catch (err) {
+          console.error('Check Email Error:', err);
+          showAlert('Network error checking email domain.');
           setSubmitting(false);
         }
-      } catch (error) {
-        console.error('Login Error:', error);
-        showAlert('Network error. Please make sure the server is running.');
-        setSubmitting(false);
-      }
-    });
-  }
-
-  // Handle Registration Submission
-  if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideAlert();
-
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      if (!name || !email || !password) {
-        showAlert('Please fill in all required fields.');
         return;
       }
 
-      if (password.length < 6) {
-        showAlert('Password must be at least 6 characters long.');
-        return;
-      }
+      // STEP 2: Authenticate or Register with Password
+      if (currentAuthStep === 'password') {
+        const password = passwordInput ? passwordInput.value : '';
+        if (!password) {
+          showAlert('Please enter a password.');
+          return;
+        }
 
-      setSubmitting(true);
+        if (password.length < 6) {
+          showAlert('Password must be at least 6 characters long.');
+          return;
+        }
 
-      try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password })
-        });
+        setSubmitting(true);
 
-        const data = await response.json();
+        const endpoint = emailCheckedState.exists ? '/api/auth/login' : '/api/auth/register';
+        const payload = emailCheckedState.exists
+          ? { email: emailCheckedState.email, password }
+          : { name: emailCheckedState.email.split('@')[0], email: emailCheckedState.email, password };
 
-        if (data.success) {
-          setAuthToken(data.token);
-          setStoredUser(data.user);
-          showAlert('Account created! Redirecting to chat...', 'success');
-          setTimeout(() => {
-            window.location.href = 'chat.html';
-          }, 800);
-        } else {
-          showAlert(data.error || 'Registration failed. Please try again.');
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            setAuthToken(data.token);
+            setStoredUser(data.user);
+            showAlert('Authentication successful! Redirecting...', 'success');
+            setTimeout(() => {
+              window.location.href = 'chat.html';
+            }, 800);
+          } else {
+            showAlert(data.error || 'Authentication failed. Please check your credentials.');
+            setSubmitting(false);
+          }
+        } catch (error) {
+          console.error('Auth Submit Error:', error);
+          showAlert('Network error. Please make sure the server is running.');
           setSubmitting(false);
         }
-      } catch (error) {
-        console.error('Registration Error:', error);
-        showAlert('Network error. Please make sure the server is running.');
-        setSubmitting(false);
       }
     });
   }
