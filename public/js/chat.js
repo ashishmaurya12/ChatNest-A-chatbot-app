@@ -1104,6 +1104,30 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
+    // Theme Mode Toggle Buttons inside Settings Drawer
+    const themeOptionBtns = document.querySelectorAll('.theme-option-btn');
+    themeOptionBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        themeOptionBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const themeVal = btn.getAttribute('data-theme-val');
+        document.documentElement.setAttribute('data-theme', themeVal);
+        localStorage.setItem('theme', themeVal);
+        showToast(`Theme mode set to ${themeVal === 'dark' ? 'Dark Arena' : 'Light Stone'}`);
+      });
+    });
+
+    // Initialize Theme Active State from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeOptionBtns.forEach(btn => {
+      if (btn.getAttribute('data-theme-val') === savedTheme) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
     // Saved Location Restore
     const savedLoc = localStorage.getItem('chatnest_location') || 'Delhi, India';
     if (userLocationInput) userLocationInput.value = savedLoc;
