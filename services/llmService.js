@@ -1164,6 +1164,36 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     return `### 📊 What is Economics? (Complete Breakdown)\n\n**Economics** is the social science that studies how individuals, businesses, governments, and societies allocate **scarce resources** to satisfy **unlimited wants and needs**.\n\n### 🏛️ Two Primary Branches:\n1. **Microeconomics**:\n   - Focuses on individual decision-makers, households, and firms. Analyzes concepts like supply and demand, market equilibrium, pricing, and consumer behavior.\n2. **Macroeconomics**:\n   - Analyzes the economy as a whole on a national or global scale. Examines key metrics such as GDP, Inflation, Unemployment rates, Fiscal & Monetary policy, and International Trade.\n\n### 🔑 Key Pillars of Economic Science:\n- **Scarcity**: Resources (time, labor, capital, natural resources) are finite.\n- **Opportunity Cost**: The value of the next best alternative given up when making a choice.\n- **Supply and Demand**: The primary driver of prices and resource allocation in market economies.`;
   }
 
+  // 6.8.5 India GDP vs Per-Capita Income Breakdown
+  if (lower.includes('per-capita') || lower.includes('per capita') || (lower.includes('india') && lower.includes('gdp'))) {
+    if (isHinglish) {
+      return `### 📊 India Ka Total GDP vs Per-Capita Income (Complete Breakdown)\n\n` +
+        `India ki **Total GDP ranking (Top 5 globally)** high hone ke bawajood **Per-Capita Income** low hone ke main reasons:\n\n` +
+        `### 🔑 1. Massive Population Divisor (1.42+ Billion People)\n` +
+        `- **Formula**: \`Per Capita Income = Total GDP ÷ Total Population\`\n` +
+        `- India ki GDP ~$3.75+ Trillion hai, lekin jab ise **1.42 Billion citizens** me divide kiya jata hai, toh average per-person income ~$2,500-$2,800/year rehti hai.\n\n` +
+        `### ⚖️ 2. High Income & Wealth Disparity\n` +
+        `- Top 1% population national wealth ka large portion hold karti hai.\n` +
+        `- Informal sector me ~80-85% workforce low baseline wages par kaam karti hai.\n\n` +
+        `### 🌾 3. High Agriculture Workforce Share\n` +
+        `- Over ~40-45% labor force agriculture par dependent hai, lekin GDP me contribution sirf ~15-18% hai.\n\n` +
+        `### 🎯 4. Summary & Growth Outlook\n` +
+        `India ek **macroeconomic giant** hai, lekin population size aur informal sector ki wajah se per-individual wealth developed countries se kam dikhti hai. Manufacturing aur skill development se ye gap fill ho raha hai!`;
+    }
+
+    return `### 📊 Why India's Per-Capita Income is Lower Than Its GDP Rank\n\n` +
+      `Despite ranking among the **top global economies by nominal GDP (Top 5)**, India's **per-capita income** remains significantly lower due to key structural and demographic factors:\n\n` +
+      `### 🔑 1. Huge Population Base (The Population Divisor)\n` +
+      `- **Formula**: \`Per-Capita Income = Total GDP ÷ Total Population\`\n` +
+      `- While India's total GDP exceeds **$3.75+ Trillion**, dividing it among **1.42+ Billion citizens** results in an average income of ~$2,500–$2,800 per person annually.\n\n` +
+      `### ⚖️ 2. Income Disparity & Wealth Concentration\n` +
+      `- A large share of national GDP is concentrated among high-earners, while the informal sector employs ~80-85% of the workforce at low baseline wages.\n\n` +
+      `### 🌾 3. High Employment in Low-Yield Agriculture\n` +
+      `- Over **40-45% of India's labor force** works in agriculture, yet the sector contributes only ~15-18% to total GDP.\n\n` +
+      `### 🎯 4. Summary & Growth Outlook\n` +
+      `India is a **macro-economic giant with micro-economic challenges**. Expanding manufacturing, formal employment, and digital infrastructure is key to elevating individual per-capita prosperity.`;
+  }
+
   // 6.9 Artificial Intelligence (AI) & Machine Learning
   if (lower.includes('artificial intelligence') || lower.includes('what is ai') || lower.includes('ai kya hai') || lower === 'ai' || lower.includes('machine learning')) {
     if (isHinglish) {
