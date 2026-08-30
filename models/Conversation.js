@@ -17,7 +17,7 @@ const conversationSchema = new mongoose.Schema({
   persona: {
     type: String,
     default: 'general',
-    enum: ['general', 'coding', 'study', 'creative', 'concise', 'uncensored']
+    enum: ['general', 'coding', 'study', 'creative', 'concise', 'uncensored', 'unfiltered']
   },
   createdAt: {
     type: Date,

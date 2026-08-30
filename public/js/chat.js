@@ -1257,7 +1257,8 @@ document.addEventListener('DOMContentLoaded', () => {
       study: 'Study Tutor',
       creative: 'Creative',
       concise: 'Rapid Concise',
-      uncensored: 'Uncensored AI'
+      uncensored: 'Unfiltered AI',
+      unfiltered: 'Unfiltered AI'
     };
     return map[key] || 'General';
   }
