@@ -1383,9 +1383,55 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       `3. **Next Steps**: Feel free to ask for specific code implementations, mathematical formulas, or detailed case studies!`;
 }
 
+/**
+ * Universal Knowledge Fetcher from Wikipedia / Open Knowledge APIs
+ */
+async function fetchUniversalKnowledge(topic) {
+  try {
+    if (!topic || topic.length < 2) return null;
+
+    const cleanTopic = topic
+      .replace(/^(what is|what's|explain|define|tell me about|how does|what are|who is|where is|when was|why is)\s+/i, '')
+      .replace(/[?!.,]/g, '')
+      .trim();
+
+    if (!cleanTopic || cleanTopic.length < 2) return null;
+
+    const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTopic)}`;
+    const res = await fetch(wikiUrl, { headers: { 'User-Agent': 'ChatNest/1.0 (https://chatnest.app)' } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.type === 'standard' && data.extract && data.extract.length > 40) {
+        return {
+          title: data.title,
+          description: data.description,
+          extract: data.extract,
+          thumbnail: data.thumbnail ? data.thumbnail.source : null
+        };
+      }
+    }
+  } catch (err) {
+    console.error('[ChatNest Universal Knowledge Error]:', err.message || err);
+  }
+  return null;
+}
+
 async function* streamMockResponse(prompt, personaKey, attachment = null, webGrounding = null, history = []) {
+  // Try Universal Wikipedia Knowledge Base first for general knowledge queries
+  const wikiData = await fetchUniversalKnowledge(prompt);
+  if (wikiData && wikiData.extract) {
+    const isHinglish = isHinglishQuery(prompt);
+    let res = `### 📚 Knowledge & Overview: ${wikiData.title}\n\n`;
+    if (wikiData.description) res += `*${wikiData.description}*\n\n`;
+    res += `${wikiData.extract}\n\n`;
+    res += isHinglish
+      ? `*Aapko is topic ke baare me aur deep details, code, ya mathematical formulas chahiye ho toh zaroor batayein!*`
+      : `*Feel free to ask for specific code implementations, step-by-step math formulas, or deeper insights on this topic!*`;
+    yield res;
+    return;
+  }
+
   const responseText = generateSmartLocalResponse(prompt, personaKey, attachment, webGrounding, history);
-  // Yield the entire response in one shot — no artificial per-token delay
   yield responseText;
 }
 
