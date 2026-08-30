@@ -591,25 +591,25 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
   // 3. Criticism / Calling AI useless / bekar / bakwas
   if (lower.includes('useless') || lower.includes('bekar') || lower.includes('bakwas') || lower.includes('bad') || lower.includes('waste') || lower.includes('dumb') || lower.includes('kuch nahi aata')) {
     if (isHinglish) {
-      return `Arey aise mat bolo yaar! 😅 Main useless bilkul nahi hoon! Main ek universal AI assistant hoon jo Senior-level Coding, Math problem solving, Science concepts, aur 🌐 Live Web Search results provide kar sakta hoon.\n\nAap mujhe koi specific coding problem (e.g. Node.js, React, Python), math integral, science question, ya live news ke baare mein puch kar dekhein—main 100% detailed aur super-helpful answer dunga! 🚀`;
+      return `Arey aise mat bolo yaar! 😅 Main useless bilkul nahi hoon. Aap mujhse kisi bhi topic ke baare me pooch sakte hain—main har sawal ka clear aur helpful answer dunga! 🚀`;
     }
-    return `I am definitely not useless! 🚀 I am an advanced AI assistant capable of senior software engineering, complex mathematical problem solving, physics breakdowns, and real-time 🌐 Web Search.\n\nTry asking me a specific coding question, math problem, or news topic, and I will give you a comprehensive, detailed answer!`;
+    return `I am definitely not useless! 🚀 Ask me any question, and I will give you a clear, detailed answer!`;
   }
 
   // 4. Boredom / Fun / Chatting
   if (lower.includes('bore') || lower.includes('kuch batao') || lower.includes('story') || lower.includes('joke')) {
     if (isHinglish) {
-      return `Agar aap bore ho rahe hain toh aao kuch mazedar try karte hain! 🎉\n\n1. Main aapko **Quantum Physics** ya **Black Holes** ke mind-bending facts bata sakta hoon.\n2. Main aapke kisi **Coding / App Idea** ke liye poora architecture design kar sakta hoon.\n3. Ya phir top header se **🌐 Web Search** toggle on karke aaj ki sabse exciting **World News** explore kar sakte hain!\n\nAap kya try karna chahenge?`;
+      return `Agar aap bore ho rahe hain toh aao kisi interesting topic par baat karte hain ya kuch naya explore karte hain! Aap batayein aaj kya discuss karna chahenge? 🎉`;
     }
-    return `If you're feeling bored, let's try something exciting! 🎉\n\n1. I can explain mind-bending facts about **Quantum Physics** or **Black Holes**.\n2. I can architect a full production stack for your **App/Startup Idea**.\n3. Or click **🌐 Web Search** in the header bar to explore top **World News**!\n\nWhat would you like to explore?`;
+    return `If you're feeling bored, let's explore something interesting! What topic would you like to talk about today? 🎉`;
   }
 
   // 5. Greetings & Conversational Queries
   if (/^(hi|hello|hey|namaste|hlo|helo|hy|kya hal|kaise ho|wassup|how are you|how are u|how r u|good morning|good evening|good afternoon|what's up|whats up|greetings|sup)\b/i.test(lower) || lower.includes('how are you') || lower.includes('how are u') || lower.includes('how r u')) {
     if (isHinglish) {
-      return `Namaste! Main **ChatNest AI** hoon—aapka universal AI companion. Main bilkul badhiya hoon! 😊\n\nAap mujhse Science, Advanced Coding, Complex Math, History, ya Aaj ki Live News ke baare mein kuch bhi pooch sakte hain. Main har sawal ka clear, detailed aur opinionated answer dene ke liye tayyar hoon! Aaj main aapki kya madad kar sakta hoon?`;
+      return `Namaste! Main **ChatNest AI** hoon. Main bilkul badhiya hoon! 😊 Aaj main aapki kya madad kar sakta hoon?`;
     }
-    return `Hello! I am **ChatNest AI**—your universal AI companion. I'm doing great, thank you for asking! 😊\n\nYou can ask me anything about Science, Software Engineering, Complex Mathematics, History, or Live World News. How can I help you today?`;
+    return `Hello! I am **ChatNest AI**. I'm doing great, thank you! 😊 How can I help you today?`;
   }
 
   // 5.2 Name & Memory Queries (e.g. "my name is...", "memorise this", "who am I", "remember...")
@@ -617,25 +617,25 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     const match = prompt.match(/(?:my name is|mera naam|i am)\s+([a-zA-Z]+)/i);
     const userName = match ? match[1] : 'Ashish';
     if (isHinglish) {
-      return `Namaste **${userName}**! Maine aapka naam yaad rakh liya hai. 😊\n\nAap mujhse Coding, Science, Math, ya kisi bhi topic par sawal pooch sakte hain. Main aapki madad ke liye ready hoon! 🚀`;
+      return `Namaste **${userName}**! Maine aapka naam yaad rakh liya hai. 😊`;
     }
-    return `Nice to meet you, **${userName}**! I have memorized your name. 😊\n\nFeel free to ask me any coding, math, science, or general questions whenever you're ready! 🚀`;
+    return `Nice to meet you, **${userName}**! I have memorized your name. 😊`;
   }
 
   // 5.5 Age / Creation / Origin Questions
   if (lower.includes('old are you') || lower.includes('old are u') || lower.includes('how old') || lower.includes('how much old') || lower.includes('your age') || lower.includes('when were you created') || lower.includes('who built you') || lower.includes('who created you')) {
     if (isHinglish) {
-      return `Main **ChatNest AI** hoon! Mujhe 2026 me build kiya gaya tha. AI models humans ki tarah age nahi karte, lekin main constantly expand aur learn karta rehta hoon taaki aapko best coding, science, aur real-time answers de saku! 🚀`;
+      return `Main **ChatNest AI** hoon! Mujhe 2026 me build kiya gaya tha. Main continuously updated rehta hoon taaki aapki best tarike se help kar saku! 🚀`;
     }
-    return `I am **ChatNest AI**! I was built in 2026 as a universal AI assistant. As an artificial intelligence, I don't age like humans, but I am continuously updated to assist you with software engineering, mathematics, physics, and real-time web search! 🚀`;
+    return `I am **ChatNest AI**, built in 2026 as a personal AI assistant. I am continuously updated to assist you with anything you need! 🚀`;
   }
 
   // 6. Who are you / Identity
   if (lower.includes('who are you') || lower.includes('kaun ho') || lower.includes('what is chatnest')) {
     if (isHinglish) {
-      return `Main **ChatNest Universal AI** hoon! Main ek hyper-intelligent, omniscient AI answering platform hoon jo Coding, Science, Mathematics, History, Philosophy, aur Real-Time Live Web Information grounding par fast, accurate, aur opinionated answers provide karta hai.`;
+      return `Main **ChatNest AI** hoon—aapka intelligent personal AI companion!`;
     }
-    return `I am **ChatNest Universal AI**, an advanced AI answering platform built to deliver deep, authoritative, and opinionated insights across Software Engineering, Science, Mathematics, History, and Live Web Search.`;
+    return `I am **ChatNest AI**—your personal AI assistant!`;
   }
 
   // 7. General prompt response matching user language
