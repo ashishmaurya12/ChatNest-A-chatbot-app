@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isListening = false;
   let currentAttachment = null;
   let isWebSearchActive = false;
+  let isUserScrolledUp = false;
 
   // DOM Element References
   const sidebar = document.getElementById('sidebar');
@@ -33,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const webSearchToggleBtn = document.getElementById('webSearchToggleBtn');
   const deleteThreadBtn = document.getElementById('deleteThreadBtn');
   const chatLog = document.getElementById('chatLog');
-  const emptyState = document.getElementById('emptyState');
+  const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+  const emptyStateElement = document.getElementById('emptyState');
+  const emptyStateTemplate = emptyStateElement ? emptyStateElement.cloneNode(true) : null;
   const typingIndicator = document.getElementById('typingIndicator');
   const chatForm = document.getElementById('chatForm');
   const userInput = document.getElementById('userInput');
@@ -47,6 +50,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const attachIcon = document.getElementById('attachIcon');
   const attachName = document.getElementById('attachName');
   const removeAttachBtn = document.getElementById('removeAttachBtn');
+
+  // Track User Manual Scroll Intent in Chat Log
+  chatLog.addEventListener('scroll', () => {
+    const distanceFromBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight;
+    if (distanceFromBottom > 120) {
+      isUserScrolledUp = true;
+      scrollToBottomBtn?.classList.remove('hidden');
+    } else {
+      isUserScrolledUp = false;
+      scrollToBottomBtn?.classList.add('hidden');
+    }
+  });
+
+  scrollToBottomBtn?.addEventListener('click', () => {
+    isUserScrolledUp = false;
+    scrollToBottomBtn.classList.add('hidden');
+    scrollToBottom(true);
+  });
   const userNameEl = document.getElementById('userName');
   const userEmailEl = document.getElementById('userEmail');
   const userAvatarEl = document.getElementById('userAvatar');
@@ -79,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupTheme();
     setupVoiceRecognition();
     setupDragAndDrop();
+    setupSettingsModal();
     await loadConversations();
 
     // Auto-create initial chat if none exists
@@ -177,21 +199,97 @@ document.addEventListener('DOMContentLoaded', () => {
     webSearchToggleBtn?.addEventListener('click', () => {
       isWebSearchActive = !isWebSearchActive;
       webSearchToggleBtn.classList.toggle('active', isWebSearchActive);
-      showToast(`Real-Time Web Search: ${isWebSearchActive ? 'ENABLED 🌐' : 'DISABLED 🔒'}`);
+      showToast(`Real-Time Web Search: ${isWebSearchActive ? 'ENABLED' : 'DISABLED'}`);
     });
 
     // File & Camera Attachment Handlers
     attachBtn?.addEventListener('click', () => fileInput?.click());
-    cameraBtn?.addEventListener('click', () => cameraInput?.click());
+    
+    // Live WebCam Camera Handlers
+    const cameraModal = document.getElementById('cameraModal');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const snapPhotoBtn = document.getElementById('snapPhotoBtn');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    let activeCameraStream = null;
+
+    async function openLiveCamera() {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+          });
+          activeCameraStream = stream;
+          if (cameraVideo) {
+            cameraVideo.srcObject = stream;
+            cameraVideo.play();
+          }
+          cameraModal?.classList.remove('hidden');
+          return;
+        } catch (err) {
+          console.warn('[WebCam Error]: Could not access camera via getUserMedia, falling back to file input:', err.message);
+        }
+      }
+      // Fallback if WebCam permission is denied or device has no camera stream support
+      cameraInput?.click();
+    }
+
+    function stopLiveCamera() {
+      if (activeCameraStream) {
+        activeCameraStream.getTracks().forEach(track => track.stop());
+        activeCameraStream = null;
+      }
+      if (cameraVideo) {
+        cameraVideo.srcObject = null;
+      }
+      cameraModal?.classList.add('hidden');
+    }
+
+    function captureCameraPhoto() {
+      if (!cameraVideo || !cameraCanvas) return;
+      const width = cameraVideo.videoWidth || 640;
+      const height = cameraVideo.videoHeight || 480;
+
+      cameraCanvas.width = width;
+      cameraCanvas.height = height;
+
+      const ctx = cameraCanvas.getContext('2d');
+      ctx.drawImage(cameraVideo, 0, 0, width, height);
+
+      const dataUrl = cameraCanvas.toDataURL('image/jpeg', 0.88);
+      const base64Data = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+      const fileName = `photo_${Date.now()}.jpg`;
+
+      currentAttachment = {
+        type: 'image',
+        name: fileName,
+        mimeType: 'image/jpeg',
+        base64Data,
+        size: 'Captured Photo'
+      };
+
+      showAttachmentPreview('🖼️', fileName, 'Captured Photo');
+      stopLiveCamera();
+    }
+
+    cameraBtn?.addEventListener('click', () => openLiveCamera());
+    closeCameraBtn?.addEventListener('click', () => stopLiveCamera());
+    snapPhotoBtn?.addEventListener('click', () => captureCameraPhoto());
+    cameraModal?.querySelector('.camera-modal-backdrop')?.addEventListener('click', () => stopLiveCamera());
 
     fileInput?.addEventListener('change', handleFileSelected);
     cameraInput?.addEventListener('change', handleFileSelected);
 
     removeAttachBtn?.addEventListener('click', () => clearAttachment());
 
-    // Search filter threads
+    // Search filter threads (debounced for performance)
+    let searchDebounceTimeout = null;
     threadSearchInput?.addEventListener('input', (e) => {
-      renderThreadList(e.target.value.toLowerCase());
+      clearTimeout(searchDebounceTimeout);
+      searchDebounceTimeout = setTimeout(() => {
+        renderThreadList(e.target.value.toLowerCase());
+      }, 150);
     });
 
     // Auto-resizing Textarea & Submit
@@ -207,24 +305,33 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Send Message Submit
+    // Send Message Submit & Stop Button Click
     chatForm?.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (isStreaming) {
+        stopStreaming();
+        return;
+      }
       const text = userInput.value.trim();
-      if ((!text && !currentAttachment) || isStreaming) return;
+      if (!text && !currentAttachment) return;
       sendMessage(text || 'Analyze this attachment:');
     });
 
-    // Starter Prompt Cards
-    document.querySelectorAll('.starter-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const prompt = card.getAttribute('data-prompt');
-        if (prompt) {
-          userInput.value = prompt;
-          chatForm.dispatchEvent(new Event('submit'));
-        }
-      });
+    sendBtn?.addEventListener('click', (e) => {
+      if (isStreaming) {
+        e.preventDefault();
+        stopStreaming();
+      }
     });
+
+    // Starter Prompt Cards
+    attachStarterCardListeners(document);
+
+    // Settings Modal Open Trigger
+    const settingsBtn = document.getElementById('settingsBtn');
+    const headerSettingsBtn = document.getElementById('headerSettingsBtn');
+    settingsBtn?.addEventListener('click', () => openSettingsModal());
+    headerSettingsBtn?.addEventListener('click', () => openSettingsModal());
 
     // Export Chat
     exportChatBtn?.addEventListener('click', () => exportConversation());
@@ -252,20 +359,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const isImage = file.type.startsWith('image/');
     const extension = (file.name.split('.').pop() || '').toLowerCase();
 
-    let docIcon = '📄';
+    let docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
     let docType = 'doc';
 
     if (isImage) {
-      docIcon = '🖼️';
+      docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
       docType = 'image';
-    } else if (extension === 'pdf') {
-      docIcon = '📕';
-    } else if (extension === 'docx' || extension === 'doc') {
-      docIcon = '📝';
-    } else if (['csv', 'xlsx', 'json'].includes(extension)) {
-      docIcon = '📊';
+    } else if (extension === 'pdf' || extension === 'docx' || extension === 'doc') {
+      docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
     } else if (['js', 'py', 'ts', 'html', 'css', 'cpp', 'c', 'java', 'sql', 'xml'].includes(extension)) {
-      docIcon = '💻';
+      docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
     }
 
     reader.onload = (event) => {
@@ -340,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function showAttachmentPreview(icon, name, sizeStr = '') {
-    if (attachIcon) attachIcon.textContent = icon;
+    if (attachIcon) attachIcon.innerHTML = icon;
     if (attachName) attachName.textContent = sizeStr ? `${name} (${sizeStr})` : name;
     attachmentPreview?.classList.remove('hidden');
     showToast(`Attached: ${name}`);
@@ -367,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Render Thread List in Sidebar
+  // Render Thread List in Sidebar (uses DocumentFragment to prevent reflows)
   function renderThreadList(filterText = '') {
     threadListEl.innerHTML = '';
 
@@ -377,6 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
       threadListEl.innerHTML = `<div class="sidebar-label" style="text-align:center; margin-top:1rem;">No chats found</div>`;
       return;
     }
+
+    const fragment = document.createDocumentFragment();
 
     filtered.forEach(c => {
       const item = document.createElement('div');
@@ -399,8 +504,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      threadListEl.appendChild(item);
+      fragment.appendChild(item);
     });
+
+    threadListEl.appendChild(fragment);
   }
 
   // Create New Conversation Thread
@@ -443,12 +550,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetchWithAuth(`/conversations/${id}/messages`);
       const data = await res.json();
       if (data.success) {
-        currentMessages = data.messages;
-        renderMessageLog();
+        currentMessages = data.messages || [];
+      } else {
+        currentMessages = [];
       }
     } catch (e) {
       console.error('Error loading thread messages:', e);
+      currentMessages = [];
     }
+    renderMessageLog();
   }
 
   // Delete Conversation
@@ -478,8 +588,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMessageLog() {
     chatLog.innerHTML = '';
 
-    if (currentMessages.length === 0) {
-      chatLog.appendChild(emptyState);
+    if (!currentMessages || currentMessages.length === 0) {
+      if (emptyStateTemplate) {
+        const emptyNode = emptyStateTemplate.cloneNode(true);
+        chatLog.appendChild(emptyNode);
+        attachStarterCardListeners(emptyNode);
+      }
       return;
     }
 
@@ -490,11 +604,22 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
   }
 
+  function attachStarterCardListeners(container) {
+    container.querySelectorAll('.starter-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const prompt = card.getAttribute('data-prompt');
+        if (prompt) {
+          userInput.value = prompt;
+          chatForm.dispatchEvent(new Event('submit'));
+        }
+      });
+    });
+  }
+
   // Append Single Message Bubble
   function appendMessageBubble(role, content, timestamp = new Date(), isLiveStream = false) {
-    if (emptyState.parentNode === chatLog) {
-      chatLog.removeChild(emptyState);
-    }
+    const existingEmpty = chatLog.querySelector('.empty-state');
+    if (existingEmpty) existingEmpty.remove();
 
     const isUser = role === 'user';
     const row = document.createElement('div');
@@ -502,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const avatarHtml = isUser
       ? `<div class="bubble-avatar user-avatar-bubble">${(getStoredUser()?.name || 'U').charAt(0).toUpperCase()}</div>`
-      : `<div class="bubble-avatar assistant-avatar">🤖</div>`;
+      : `<div class="bubble-avatar assistant-avatar" style="font-family:var(--font-heading); font-weight:800; font-size:0.75rem; color:#6366f1;">CN</div>`;
 
     const formattedTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -622,12 +747,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let activeAbortController = null;
+
+  function stopStreaming() {
+    if (activeAbortController) {
+      activeAbortController.abort();
+      activeAbortController = null;
+    }
+    isStreaming = false;
+    typingIndicator.classList.add('hidden');
+    showToast('Generation stopped');
+    setSendBtnState(false);
+  }
+
+  function setSendBtnState(streaming) {
+    if (!sendBtn) return;
+    if (streaming) {
+      sendBtn.classList.add('stop-state');
+      sendBtn.title = 'Stop generating';
+      sendBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>`;
+      sendBtn.disabled = false;
+    } else {
+      sendBtn.classList.remove('stop-state');
+      sendBtn.title = 'Send Message';
+      sendBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+      sendBtn.disabled = !userInput.value.trim() && !currentAttachment;
+    }
+  }
+
   // Send Message with SSE Stream Reader
   async function sendMessage(text) {
-    if (!activeConversationId || isStreaming) return;
+    if (!activeConversationId) return;
+
+    if (isStreaming) {
+      stopStreaming();
+      return;
+    }
 
     isStreaming = true;
-    sendBtn.disabled = true;
+    activeAbortController = new AbortController();
+    setSendBtnState(true);
+
     userInput.value = '';
     userInput.style.height = 'auto';
 
@@ -647,7 +807,10 @@ document.addEventListener('DOMContentLoaded', () => {
     typingIndicator.classList.remove('hidden');
     scrollToBottom();
 
-    // 3. Initiate SSE Streaming Request
+    let aiRow = null;
+    let bubbleEl = null;
+
+    // 3. Initiate SSE Streaming Request with Abort Signal
     try {
       const response = await fetch(`/api/chat/${activeConversationId}`, {
         method: 'POST',
@@ -655,6 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${getAuthToken()}`
         },
+        signal: activeAbortController.signal,
         body: JSON.stringify({
           message: text,
           persona: personaSelect.value,
@@ -677,19 +841,28 @@ document.addEventListener('DOMContentLoaded', () => {
           } catch (tErr) {}
         }
         showToast(errorMsg, 'danger');
-        isStreaming = false;
-        sendBtn.disabled = false;
         return;
       }
 
       // Create live AI message row
       let accumulatedText = '';
-      const aiRow = appendMessageBubble('assistant', '', new Date(), true);
-      const bubbleEl = aiRow.querySelector('.assistant-bubble');
+      aiRow = appendMessageBubble('assistant', '', new Date(), true);
+      bubbleEl = aiRow.querySelector('.assistant-bubble');
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
+      let renderScheduled = false;
+
+      const scheduleRender = () => {
+        if (renderScheduled) return;
+        renderScheduled = true;
+        requestAnimationFrame(() => {
+          if (bubbleEl) bubbleEl.innerHTML = parseMarkdown(accumulatedText);
+          scrollToBottom();
+          renderScheduled = false;
+        });
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -708,7 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
           try {
             const parsed = JSON.parse(dataStr);
             if (parsed.meta) {
-              // Update thread title
               currentChatTitle.textContent = parsed.meta.title;
               const targetConv = conversations.find(c => c._id === parsed.meta.conversationId);
               if (targetConv) targetConv.title = parsed.meta.title;
@@ -716,22 +888,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (parsed.token !== undefined) {
               accumulatedText += parsed.token;
-              bubbleEl.innerHTML = parseMarkdown(accumulatedText);
-              attachCodeCopyListeners(aiRow);
-              scrollToBottom();
+              scheduleRender();
             }
           } catch (e) {
-            // Ignore partial SSE JSON frames until complete
+            // Ignore partial SSE JSON frames
           }
         }
       }
 
-      // Remove streaming cursor styling & highlight code & math
-      bubbleEl.classList.remove('streaming-cursor');
-      if (window.hljs) {
+      // Final render & cleanup
+      if (bubbleEl) {
+        bubbleEl.innerHTML = parseMarkdown(accumulatedText);
+        bubbleEl.classList.remove('streaming-cursor');
+        attachCodeCopyListeners(aiRow);
+      }
+
+      if (window.hljs && aiRow) {
         aiRow.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
       }
-      if (window.renderMathInElement) {
+      if (window.renderMathInElement && aiRow) {
         try {
           renderMathInElement(aiRow, {
             delimiters: [
@@ -745,15 +920,23 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
       }
 
-      currentMessages.push({ role: 'assistant', content: accumulatedText, createdAt: new Date() });
+      if (accumulatedText) {
+        currentMessages.push({ role: 'assistant', content: accumulatedText, createdAt: new Date() });
+      }
 
     } catch (error) {
-      console.error('Streaming request error:', error);
-      typingIndicator.classList.add('hidden');
-      showToast('Network error during streaming', 'danger');
+      if (error.name === 'AbortError') {
+        console.log('[Stream Aborted by User]');
+      } else {
+        console.error('Streaming request error:', error);
+        showToast('Network error during streaming', 'danger');
+      }
     } finally {
       isStreaming = false;
-      sendBtn.disabled = false;
+      activeAbortController = null;
+      setSendBtnState(false);
+      typingIndicator.classList.add('hidden');
+      if (bubbleEl) bubbleEl.classList.remove('streaming-cursor');
     }
   }
 
@@ -803,6 +986,179 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // -------------------------------------------------------------------------
+  // Gemini-Style Settings & Personal Intelligence Modal Logic
+  // -------------------------------------------------------------------------
+  function setupSettingsModal() {
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+    const backdrop = settingsModal?.querySelector('.settings-backdrop');
+    const navItems = settingsModal?.querySelectorAll('.settings-nav-item');
+    const tabPanels = settingsModal?.querySelectorAll('.settings-tab-panel');
+    const settingsTabTitle = document.getElementById('settingsTabTitle');
+
+    const clearMemoriesBtn = document.getElementById('clearMemoriesBtn');
+    const addMemoryBtn = document.getElementById('addMemoryBtn');
+    const manualMemoryInput = document.getElementById('manualMemoryInput');
+    const tempSlider = document.getElementById('tempSlider');
+    const tempValue = document.getElementById('tempValue');
+    const saveLocationBtn = document.getElementById('saveLocationBtn');
+    const userLocationInput = document.getElementById('userLocationInput');
+    const settingsFooterLocation = document.getElementById('settingsFooterLocation');
+
+    // Tab Navigation
+    const tabTitles = {
+      intelligence: 'Personal Intelligence',
+      provider: 'AI Model & Provider',
+      spark: 'Gemini Spark Settings',
+      theme: 'Theme & Appearance',
+      location: 'Location Context',
+      stats: 'Usage & Limits'
+    };
+
+    navItems?.forEach(item => {
+      item.addEventListener('click', () => {
+        const tab = item.getAttribute('data-tab');
+        navItems.forEach(n => n.classList.remove('active'));
+        tabPanels?.forEach(p => {
+          p.classList.add('hidden');
+          p.classList.remove('active');
+        });
+
+        item.classList.add('active');
+        const targetPanel = document.getElementById(`tab-${tab}`);
+        if (targetPanel) {
+          targetPanel.classList.remove('hidden');
+          targetPanel.classList.add('active');
+        }
+        if (settingsTabTitle) settingsTabTitle.textContent = tabTitles[tab] || 'Settings';
+      });
+    });
+
+    // Close Modal Event Listeners
+    closeSettingsBtn?.addEventListener('click', () => closeSettingsModal());
+    backdrop?.addEventListener('click', () => closeSettingsModal());
+
+    // Temperature Slider
+    tempSlider?.addEventListener('input', (e) => {
+      if (tempValue) tempValue.textContent = e.target.value;
+    });
+
+    // Clear All Memories
+    clearMemoriesBtn?.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to clear all stored memories?')) return;
+      try {
+        const res = await fetchWithAuth('/auth/memories', { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('All stored memories cleared');
+          loadUserMemories();
+        }
+      } catch (e) {
+        showToast('Failed to clear memories', 'danger');
+      }
+    });
+
+    // Add Memory Manually
+    addMemoryBtn?.addEventListener('click', async () => {
+      const text = manualMemoryInput?.value.trim();
+      if (!text) return;
+      try {
+        // Send a memory extract prompt to backend
+        await fetchWithAuth('/chat/' + (activeConversationId || 'dummy'), {
+          method: 'POST',
+          body: JSON.stringify({ message: `remember this fact: ${text}` })
+        });
+        manualMemoryInput.value = '';
+        showToast(`Saved memory: "${text.slice(0, 30)}..."`);
+        setTimeout(loadUserMemories, 500);
+      } catch (e) {
+        showToast('Could not save memory', 'danger');
+      }
+    });
+
+    // Save Location
+    saveLocationBtn?.addEventListener('click', () => {
+      const loc = userLocationInput?.value.trim();
+      if (loc) {
+        if (settingsFooterLocation) settingsFooterLocation.textContent = loc;
+        localStorage.setItem('chatnest_location', loc);
+        showToast(`Location context set to: ${loc}`);
+      }
+    });
+
+    // Accent Color Swatches
+    const colorSwatches = document.querySelectorAll('.color-swatch-btn');
+    colorSwatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        colorSwatches.forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const accent = swatch.getAttribute('data-accent');
+        showToast(`Accent theme updated: ${accent}`);
+      });
+    });
+
+    // Saved Location Restore
+    const savedLoc = localStorage.getItem('chatnest_location') || 'Delhi, India';
+    if (userLocationInput) userLocationInput.value = savedLoc;
+    if (settingsFooterLocation) settingsFooterLocation.textContent = savedLoc;
+  }
+
+  function openSettingsModal() {
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) {
+      settingsModal.classList.remove('hidden');
+      loadUserMemories();
+      updateSessionStats();
+    }
+  }
+
+  function closeSettingsModal() {
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) {
+      settingsModal.classList.add('hidden');
+    }
+  }
+
+  async function loadUserMemories() {
+    const memoriesList = document.getElementById('memoriesList');
+    const memoryCount = document.getElementById('memoryCount');
+    if (!memoriesList) return;
+
+    try {
+      const res = await fetchWithAuth('/auth/memories');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.memories)) {
+        if (memoryCount) memoryCount.textContent = data.memories.length;
+
+        if (data.memories.length === 0) {
+          memoriesList.innerHTML = `<div class="empty-memories">No stored memories yet. Chat with ChatNest to automatically save personal context!</div>`;
+          return;
+        }
+
+        let html = '';
+        data.memories.forEach(m => {
+          html += `
+            <div class="memory-item">
+              <span>${escapeHtml(m.fact)}</span>
+              <small style="color:var(--text-dim);">${new Date(m.createdAt).toLocaleDateString()}</small>
+            </div>
+          `;
+        });
+        memoriesList.innerHTML = html;
+      }
+    } catch (e) {
+      console.error('Error loading memories:', e);
+    }
+  }
+
+  function updateSessionStats() {
+    const statMessageCount = document.getElementById('statMessageCount');
+    const statThreadCount = document.getElementById('statThreadCount');
+    if (statMessageCount) statMessageCount.textContent = currentMessages.length;
+    if (statThreadCount) statThreadCount.textContent = conversations.length;
+  }
+
   // Export Conversation to TXT/Markdown
   function exportConversation() {
     if (!currentMessages || currentMessages.length === 0) {
@@ -829,8 +1185,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Helper Utils
-  function scrollToBottom() {
-    chatLog.scrollTop = chatLog.scrollHeight;
+  function scrollToBottom(force = false) {
+    if (force || !isUserScrolledUp) {
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
   }
 
   function getPersonaLabel(key) {
@@ -861,12 +1219,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const fileName = match[1];
       let userText = (match[2] || content.replace(/^\[Attached:[^\]]+\]/, '')).replace(/\[DOCUMENT CONTENT:[\s\S]*?\[END DOCUMENT\]/gi, '').trim();
       const ext = (fileName.split('.').pop() || '').toLowerCase();
-      let docIcon = '📄';
-      if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) docIcon = '🖼️';
-      else if (ext === 'pdf') docIcon = '📕';
-      else if (ext === 'docx' || ext === 'doc') docIcon = '📝';
-      else if (['csv', 'xlsx', 'json'].includes(ext)) docIcon = '📊';
-      else if (['js', 'py', 'ts', 'html', 'css', 'cpp', 'c', 'java', 'sql', 'xml'].includes(ext)) docIcon = '💻';
+      let docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+      if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+      else if (['js', 'py', 'ts', 'html', 'css', 'cpp', 'c', 'java', 'sql', 'xml'].includes(ext)) docIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
 
       return `
         <div class="user-attachment-card">

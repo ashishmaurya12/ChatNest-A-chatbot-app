@@ -7,6 +7,9 @@ const { chatLimiter } = require('../middleware/rateLimiter');
 const { getLLMStream } = require('../services/llmService');
 const { parseDocumentAttachment } = require('../services/docParser');
 
+const User = require('../models/User');
+const { extractAndSaveMemory } = require('../services/memoryService');
+
 // @route   POST /api/chat/:conversationId
 // @desc    Send a message to an AI persona in a conversation thread & stream response
 // @access  Private
@@ -39,16 +42,24 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
 
     const rawMessage = (message || '').trim();
 
+    // Auto-extract and save any user facts, then fetch memories — single DB round-trip
+    await extractAndSaveMemory(req.user.id, rawMessage);
+    const userDoc = await User.findById(req.user.id).select('memories').lean();
+    const userMemories = userDoc ? (userDoc.memories || []) : [];
+
     // Auto-generate title if title is "New Chat"
     let newTitle = null;
-    if (conversation.title === 'New Chat') {
+    const needsTitleUpdate = conversation.title === 'New Chat';
+    if (needsTitleUpdate) {
       newTitle = (rawMessage || processedAttachment?.name || 'New Chat').slice(0, 30);
       if ((rawMessage || '').length > 30) newTitle += '...';
-      conversation.title = newTitle;
     }
 
-    conversation.updatedAt = Date.now();
-    await conversation.save();
+    // Update conversation atomically (title, persona, updatedAt) — avoids load-mutate-save cycle
+    const updateFields = { updatedAt: Date.now() };
+    if (needsTitleUpdate) updateFields.title = newTitle;
+    if (persona && persona !== conversation.persona) updateFields.persona = persona;
+    await Conversation.findByIdAndUpdate(conversation._id, { $set: updateFields });
 
     // 1. Save User Message to Database with Document Text Context for Thread Memory
     let displayMessage = rawMessage;
@@ -64,16 +75,14 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
       content: displayMessage
     });
 
-    // 2. Load recent conversation history (get MOST RECENT 20 messages, then reverse to chronological order)
+    // 2. Load recent conversation history — sorted ascending from DB (avoids in-memory reverse)
     const historyDocs = await Message.find({
       conversationId: conversation._id,
       _id: { $ne: userMsg._id } // exclude current user message
     })
-      .sort({ createdAt: -1 })
-      .limit(20);
-
-    // Reverse to chronological order (oldest to newest)
-    historyDocs.reverse();
+      .sort({ createdAt: 1 })
+      .limit(20)
+      .lean();
 
     const history = historyDocs.map(msg => {
       let cleanedContent = msg.content || '';
@@ -87,11 +96,13 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
       };
     });
 
-    // 3. Configure SSE Headers
+    // 3. Configure SSE Headers for ultra-low-latency streaming
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable proxy buffering for instant delivery
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable NGINX/Proxy buffering
+    if (res.socket) res.socket.setNoDelay(true); // Disable Nagle algorithm for immediate packet dispatch
+    if (typeof res.flushHeaders === 'function') res.flushHeaders();
 
     // Send metadata payload if title was updated
     if (newTitle) {
@@ -100,8 +111,8 @@ router.post('/:conversationId', authMiddleware, chatLimiter, async (req, res) =>
 
     let fullAiResponse = '';
 
-    // 4. Stream tokens from LLM Service with Web Search Grounding & Parsed Document support
-    for await (const chunk of getLLMStream(displayMessage, history, conversation.persona, processedAttachment, !!webSearch)) {
+    // 4. Stream tokens from LLM Service with Web Search Grounding, Parsed Document & User Memories support
+    for await (const chunk of getLLMStream(displayMessage, history, conversation.persona, processedAttachment, !!webSearch, userMemories)) {
       fullAiResponse += chunk;
       res.write(`data: ${JSON.stringify({ token: chunk })}\n\n`);
     }

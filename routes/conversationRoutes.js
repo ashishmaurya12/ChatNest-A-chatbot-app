@@ -13,7 +13,9 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const conversations = await Conversation.find({ userId: req.user.id })
-      .sort({ updatedAt: -1 });
+      .select('title persona updatedAt createdAt')
+      .sort({ updatedAt: -1 })
+      .lean();
 
     res.json({
       success: true,
@@ -64,7 +66,8 @@ router.get('/:id/messages', async (req, res) => {
     }
 
     const messages = await Message.find({ conversationId: conversation._id })
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .lean();
 
     res.json({
       success: true,
@@ -113,7 +116,7 @@ router.patch('/:id', async (req, res) => {
 // @access  Private
 router.delete('/:id', async (req, res) => {
   try {
-    const conversation = await Conversation.findOne({
+    const conversation = await Conversation.findOneAndDelete({
       _id: req.params.id,
       userId: req.user.id
     });
@@ -122,10 +125,8 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Conversation thread not found.' });
     }
 
-    // Delete all messages in thread
+    // Delete all messages in the deleted thread
     await Message.deleteMany({ conversationId: conversation._id });
-    // Delete thread document
-    await Conversation.deleteOne({ _id: conversation._id });
 
     res.json({
       success: true,

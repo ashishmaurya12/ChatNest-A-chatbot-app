@@ -4,22 +4,44 @@
 
 const API_BASE = '/api';
 
+// Memory Caches for localStorage reads
+let _cachedToken = null;
+let _cachedUser = null;
+
 // Token Storage Helpers
-const getAuthToken = () => localStorage.getItem('chatnest_token');
-const setAuthToken = (token) => localStorage.setItem('chatnest_token', token);
+const getAuthToken = () => {
+  if (_cachedToken === null) {
+    _cachedToken = localStorage.getItem('chatnest_token');
+  }
+  return _cachedToken;
+};
+
+const setAuthToken = (token) => {
+  _cachedToken = token;
+  localStorage.setItem('chatnest_token', token);
+};
+
 const clearAuthToken = () => {
+  _cachedToken = '';
+  _cachedUser = null;
   localStorage.removeItem('chatnest_token');
   localStorage.removeItem('chatnest_user');
 };
 
 const getStoredUser = () => {
+  if (_cachedUser !== null) return _cachedUser;
   try {
-    return JSON.parse(localStorage.getItem('chatnest_user'));
+    _cachedUser = JSON.parse(localStorage.getItem('chatnest_user'));
+    return _cachedUser;
   } catch (e) {
     return null;
   }
 };
-const setStoredUser = (user) => localStorage.setItem('chatnest_user', JSON.stringify(user));
+
+const setStoredUser = (user) => {
+  _cachedUser = user;
+  localStorage.setItem('chatnest_user', JSON.stringify(user));
+};
 
 /**
  * Fetch wrapper automatically injecting Bearer JWT token
@@ -55,22 +77,23 @@ async function fetchWithAuth(endpoint, options = {}) {
 /**
  * Toast Notification Utility
  */
+let _toastContainerRef = null;
 function showToast(message, type = 'info') {
-  let container = document.getElementById('toastContainer');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container';
-    document.body.appendChild(container);
+  if (!_toastContainerRef || !_toastContainerRef.isConnected) {
+    _toastContainerRef = document.getElementById('toastContainer');
+    if (!_toastContainerRef) {
+      _toastContainerRef = document.createElement('div');
+      _toastContainerRef.id = 'toastContainer';
+      _toastContainerRef.className = 'toast-container';
+      document.body.appendChild(_toastContainerRef);
+    }
   }
 
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `
-    <span>${message}</span>
-  `;
+  toast.innerHTML = `<span>${message}</span>`;
 
-  container.appendChild(toast);
+  _toastContainerRef.appendChild(toast);
 
   setTimeout(() => {
     toast.style.opacity = '0';

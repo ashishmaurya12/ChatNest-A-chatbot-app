@@ -1,12 +1,16 @@
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const { execSync } = require('child_process');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const conversationRoutes = require('./routes/conversationRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const evalRoutes = require('./routes/evalRoutes');
 
 const app = express();
 
@@ -23,11 +27,26 @@ process.on('unhandledRejection', (reason) => {
 });
 
 // Core Middlewares
-app.use(cors());
+app.use(helmet({ contentSecurityPolicy: false })); // Security headers (CSP disabled for inline scripts)
+app.use(compression()); // Gzip all responses
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Body parser payload error handler
+// Serve static frontend files from 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/eval', evalRoutes);
+
+// Body parser / route error handler (must be AFTER routes to catch their errors)
 app.use((err, req, res, next) => {
   if (err && (err.type === 'entity.too.large' || err.status === 413)) {
     return res.status(413).json({ success: false, error: 'Attached file size is too large (maximum limit is 50MB).' });
@@ -38,14 +57,6 @@ app.use((err, req, res, next) => {
   }
   next();
 });
-
-// Serve static frontend files from 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/conversations', conversationRoutes);
-app.use('/api/chat', chatRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -67,9 +78,42 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`\n==================================================`);
-  console.log(`🚀 ChatNest AI Server is live on http://localhost:${PORT}`);
-  console.log(`💬 Open your browser at http://localhost:${PORT}`);
-  console.log(`==================================================\n`);
-});
+function startServer() {
+  const server = app.listen(PORT, () => {
+    console.log(`\n==================================================`);
+    console.log(`ChatNest AI Server is live on http://localhost:${PORT}`);
+    console.log(`Open your browser at http://localhost:${PORT}`);
+    console.log(`==================================================\n`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`[Server] Port ${PORT} is in use. Killing the occupying process and retrying...`);
+      try {
+        // Find and kill whatever is using the port
+        const result = execSync(`netstat -ano | findstr :${PORT}`).toString();
+        const lines = result.trim().split('\n');
+        const pids = new Set();
+        for (const line of lines) {
+          const parts = line.trim().split(/\s+/);
+          const pid = parts[parts.length - 1];
+          if (pid && pid !== '0') pids.add(pid);
+        }
+        const currentPid = String(process.pid);
+        for (const pid of pids) {
+          if (pid !== currentPid) {
+            try { execSync(`taskkill /PID ${pid} /F`); } catch (_) {}
+          }
+        }
+      } catch (_) {}
+
+      // Retry after a short delay
+      setTimeout(startServer, 1000);
+    } else {
+      console.error('[Server Error]:', err.message);
+      process.exit(1);
+    }
+  });
+}
+
+startServer();

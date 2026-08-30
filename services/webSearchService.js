@@ -18,7 +18,14 @@ async function searchDuckDuckGo(query) {
       'Accept-Language': 'en-US,en;q=0.9'
     };
 
-    const response = await fetch(url, { headers });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    let response;
+    try {
+      response = await fetch(url, { headers, signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     const results = [];
 
     if (response.ok) {
@@ -50,7 +57,14 @@ async function searchDuckDuckGo(query) {
     // If HTML scraping yields no results, fallback to DuckDuckGo Instant Answer JSON API
     if (results.length === 0) {
       try {
-        const apiResponse = await fetch(`https://api.duckduckgo.com/?q=${encodedQuery}&format=json&no_html=1&no_redirect=1`);
+        const apiController = new AbortController();
+        const apiTimeoutId = setTimeout(() => apiController.abort(), 6000);
+        let apiResponse;
+        try {
+          apiResponse = await fetch(`https://api.duckduckgo.com/?q=${encodedQuery}&format=json&no_html=1&no_redirect=1`, { signal: apiController.signal });
+        } finally {
+          clearTimeout(apiTimeoutId);
+        }
         if (apiResponse.ok) {
           const apiData = await apiResponse.json();
           if (apiData.AbstractText) {
@@ -90,7 +104,14 @@ async function searchWikipedia(query) {
     const encodedQuery = encodeURIComponent(query);
     const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodedQuery}&format=json&utf8=1`;
 
-    const response = await fetch(url);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    let response;
+    try {
+      response = await fetch(url, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
     if (!response.ok) return [];
 
     const data = await response.json();
@@ -106,11 +127,42 @@ async function searchWikipedia(query) {
   }
 }
 
+// In-Memory Web Search Result Cache (15-Minute TTL)
+const searchCache = new Map();
+const SEARCH_CACHE_TTL_MS = 15 * 60 * 1000;
+
+function getCachedSearchResults(query) {
+  const key = query.toLowerCase().trim();
+  const cached = searchCache.get(key);
+  if (cached && (Date.now() - cached.timestamp < SEARCH_CACHE_TTL_MS)) {
+    return cached.data;
+  }
+  if (cached) searchCache.delete(key); // Evict expired
+  return null;
+}
+
+function setCachedSearchResults(query, data) {
+  const key = query.toLowerCase().trim();
+  // Keep cache bounded to 100 entries max to prevent memory growth
+  if (searchCache.size > 100) {
+    const oldestKey = searchCache.keys().next().value;
+    searchCache.delete(oldestKey);
+  }
+  searchCache.set(key, { data, timestamp: Date.now() });
+}
+
 /**
  * Main Search Grounding function: Returns structured web grounding context
  */
 async function performWebSearch(query) {
   if (!query || !query.trim()) return null;
+
+  // Check in-memory cache first
+  const cached = getCachedSearchResults(query);
+  if (cached) {
+    console.log(`[Web Search Cache Hit]: "${query}"`);
+    return cached;
+  }
 
   try {
     const [ddgResults, wikiResults] = await Promise.all([
@@ -136,10 +188,13 @@ async function performWebSearch(query) {
     });
     groundingContext += `[END OF REAL-TIME WEB SEARCH DATA. Incorporate this live data into your answer seamlessly and cite sources where relevant.]\n\n`;
 
-    return {
+    const resultObj = {
       results: combined.slice(0, 5),
       groundingText: groundingContext
     };
+
+    setCachedSearchResults(query, resultObj);
+    return resultObj;
   } catch (err) {
     console.warn('[Web Search Grounding Warning]:', err.message);
     return null;

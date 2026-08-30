@@ -121,4 +121,33 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// @route   GET /api/auth/memories
+// @desc    Get user's stored persistent memories
+// @access  Private
+router.get('/memories', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('memories');
+    res.json({
+      success: true,
+      memories: user ? (user.memories || []) : []
+    });
+  } catch (error) {
+    console.error('[Get Memories Error]:', error);
+    res.status(500).json({ success: false, error: 'Server error fetching user memories.' });
+  }
+});
+
+// @route   DELETE /api/auth/memories
+// @desc    Clear user's stored persistent memories
+// @access  Private
+router.delete('/memories', authMiddleware, async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(req.user.id, { memories: [] });
+    res.json({ success: true, message: 'All stored memories cleared successfully.' });
+  } catch (error) {
+    console.error('[Clear Memories Error]:', error);
+    res.status(500).json({ success: false, error: 'Server error clearing memories.' });
+  }
+});
+
 module.exports = router;
