@@ -81,8 +81,14 @@ const PORT = process.env.PORT || 5000;
 function startServer() {
   const server = app.listen(PORT, () => {
     console.log(`\n==================================================`);
-    console.log(`ChatNest AI Server is live on http://localhost:${PORT}`);
-    console.log(`Open your browser at http://localhost:${PORT}`);
+    console.log(`🚀 ChatNest Server running on port ${PORT}`);
+    console.log(`🌐 Open in browser: http://localhost:${PORT}`);
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && geminiKey.startsWith('AIzaSy')) {
+      console.log('✨ [ChatNest AI Status]: Google Gemini Official API is ACTIVE (Gemini 1.5/2.0 Flash enabled)');
+    } else {
+      console.log('💡 [ChatNest AI Status]: Running with Universal Knowledge Engine (To activate Official Google Gemini API, add your key starting with AIzaSy... in .env)');
+    }
     console.log(`==================================================\n`);
   });
 
