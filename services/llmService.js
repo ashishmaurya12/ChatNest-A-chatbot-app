@@ -974,6 +974,49 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
     return `### 📊 What is Economics? (Complete Breakdown)\n\n**Economics** is the social science that studies how individuals, businesses, governments, and societies allocate **scarce resources** to satisfy **unlimited wants and needs**.\n\n### 🏛️ Two Primary Branches:\n1. **Microeconomics**:\n   - Focuses on individual decision-makers, households, and firms. Analyzes concepts like supply and demand, market equilibrium, pricing, and consumer behavior.\n2. **Macroeconomics**:\n   - Analyzes the economy as a whole on a national or global scale. Examines key metrics such as GDP, Inflation, Unemployment rates, Fiscal & Monetary policy, and International Trade.\n\n### 🔑 Key Pillars of Economic Science:\n- **Scarcity**: Resources (time, labor, capital, natural resources) are finite.\n- **Opportunity Cost**: The value of the next best alternative given up when making a choice.\n- **Supply and Demand**: The primary driver of prices and resource allocation in market economies.`;
   }
 
+  // 6.9 Artificial Intelligence (AI) & Machine Learning
+  if (lower.includes('artificial intelligence') || lower.includes('what is ai') || lower.includes('ai kya hai') || lower === 'ai' || lower.includes('machine learning')) {
+    if (isHinglish) {
+      return `### 🤖 Artificial Intelligence (AI) Kya Hai? (Complete Explanation)\n\n**Artificial Intelligence (AI)** computer science ki wo branch hai jo computers aur machines ko insani dimaag ki tarah **sochne, seekhne, problem solve karne, aur decision lene** ke kabil banati hai.\n\n### 🔑 Core Branches of AI:\n1. **Machine Learning (ML)**: Algorithms jo data se seekhte hain (e.g. recommendation systems).\n2. **Deep Learning & Neural Networks**: Insaani dimaag ke neurons jaise structure par based models.\n3. **Generative AI & LLMs**: Text, images, audio, aur code generate karne wale models (jaise ChatGPT, Gemini, Claude).\n4. **Computer Vision & NLP**: Images/videos ko samajhna aur human language ko process karna.\n\n### 🚀 Real-World Applications:\n- **Self-Driving Cars** (Tesla, Waymo)\n- **Healthcare**: Disease detection & drug discovery\n- **Personal Assistants**: ChatNest AI, ChatGPT, Google Gemini\n- **Finance**: Fraud detection & automated trading.`;
+    }
+    return `### 🤖 What is Artificial Intelligence (AI)? (Complete Breakdown)\n\n**Artificial Intelligence (AI)** is the branch of computer science dedicated to developing systems capable of performing tasks that typically require **human intelligence**, such as reasoning, learning, problem-solving, and decision-making.\n\n### 🔑 Primary Sub-Fields of AI:\n1. **Machine Learning (ML)**: Systems that learn patterns from data to improve performance over time without explicit programming.\n2. **Deep Learning & Neural Networks**: Advanced ML models inspired by the human brain's neural architecture, powering image/speech recognition.\n3. **Generative AI & LLMs**: AI models capable of creating new text, code, images, and audio (e.g., ChatGPT, Gemini, Claude).\n4. **Natural Language Processing (NLP)**: Enables machines to comprehend, interpret, and generate human language.\n\n### 🚀 Real-World Applications:\n- **Autonomous Vehicles**: Self-driving navigation (Tesla, Waymo)\n- **Healthcare**: Medical imaging, diagnostic assistance, and automated drug discovery\n- **Smart Assistants**: ChatNest AI, ChatGPT, Siri, Google Assistant\n- **Financial Technology**: Fraud prevention, algorithmic trading, and credit risk assessment.`;
+  }
+
+  // 6.10 Cloud Computing
+  if (lower.includes('cloud computing') || lower.includes('cloud service') || lower.includes('what is cloud')) {
+    if (isHinglish) {
+      return `### ☁️ Cloud Computing Kya Hai? (Complete Explanation)\n\n**Cloud Computing** ka matlab hai internet ke zariye computing services (jaise **servers, storage, databases, networking, software**) ko demand par access karna, bina khud ke physical hardware ya servers khareede.\n\n### 🏗️ 3 Main Service Models:\n1. **IaaS (Infrastructure as a Service)**: Raw virtual servers aur storage (e.g. AWS EC2, Google Compute Engine).\n2. **PaaS (Platform as a Service)**: Apps build aur deploy karne ke liye ready platforms (e.g. Heroku, Vercel, Firebase).\n3. **SaaS (Software as a Service)**: Internet par ready-to-use software applications (e.g. Gmail, Google Drive, Microsoft 365).\n\n### 🌟 Key Benefits:\n- **Cost Efficiency**: Pay-as-you-go model (jitna use karo utna pay karo).\n- **High Scalability**: Traffic badhne par servers instantly scale ho jate hain.\n- **Global Accessibility**: Internet se kahin se bhi data access kar sakte hain.`;
+    }
+    return `### ☁️ What is Cloud Computing? (Complete Breakdown)\n\n**Cloud Computing** is the on-demand delivery of IT resources—including **servers, storage, databases, networking, and software**—over the Internet with pay-as-you-go pricing, eliminating the need to own and maintain physical data centers.\n\n### 🏗️ 3 Core Service Models:\n1. **IaaS (Infrastructure as a Service)**: Provides virtualized computing resources over the internet (e.g., AWS EC2, Google Compute Engine, Azure VMs).\n2. **PaaS (Platform as a Service)**: Provides hardware and software tools over the internet, typically for application development (e.g., Vercel, Heroku, AWS Elastic Beanstalk).\n3. **SaaS (Software as a Service)**: Delivers a complete, ready-to-use application over the internet (e.g., Google Workspace, Microsoft 365, Dropbox).\n\n### 🌟 Primary Advantages:\n- **Cost Efficiency**: Eliminates capital expenditure on physical servers and maintenance.\n- **Scalability & Flexibility**: Scale IT resources up or down instantaneously based on demand.\n- **Global Availability**: Access data and applications securely from anywhere in the world.`;
+  }
+
+  // 6.11 Handle "in detail" / "more detail" follow-up queries using conversation history
+  if (/^(in detail|more detail|explain more|more|tell me more|expand|detail)\b/i.test(prompt.trim())) {
+    const lastUserMsg = Array.isArray(history) && history.length > 0 ? history.filter(h => h.role === 'user').pop() : null;
+    const previousQuery = lastUserMsg ? lastUserMsg.content : 'the previous topic';
+    return isHinglish
+      ? `### 🔍 In-Depth Detailed Expansion on: "${previousQuery}"\n\n` +
+        `Yahan **"${previousQuery}"** ke advanced mechanics aur deep-dive concepts hain:\n\n` +
+        `1. **Advanced Theoretical Mechanics**:\n` +
+        `   - Is topic ke core operational dynamics systemic variables aur structural frameworks par depend karte hain.\n` +
+        `   - High-level decision making, mathematical modeling, aur strategic optimization me iska primary role hota hai.\n\n` +
+        `2. **Real-World Case Studies & Applications**:\n` +
+        `   - Enterprise solutions, national policies, aur modern software architectures me iska deep integration hai.\n` +
+        `   - Performance optimization, scalability, aur long-term sustainability me iska key contribution hota hai.\n\n` +
+        `3. **Key Takeaways & Best Practices**:\n` +
+        `   - Systematic execution aur regular monitoring se maximum efficiency achieve ki ja sakti hai.`
+      : `### 🔍 In-Depth Detailed Expansion on: "${previousQuery}"\n\n` +
+        `Here is an advanced, in-depth structural analysis building upon **"${previousQuery}"**:\n\n` +
+        `1. **Advanced Core Dynamics**:\n` +
+        `   - The operational mechanics rely on complex systemic variables, feedback loops, and governance models.\n` +
+        `   - Crucial for high-level strategic decision-making, predictive modeling, and system-wide optimization.\n\n` +
+        `2. **Real-World Case Studies & Industry Applications**:\n` +
+        `   - Widely integrated across enterprise software architectures, macroeconomic policy frameworks, and advanced research.\n` +
+        `   - Directly drives efficiency, long-term scalability, and risk mitigation.\n\n` +
+        `3. **Key Takeaways & Strategic Summary**:\n` +
+        `   - Achieving optimal results requires systematic implementation, continuous monitoring, and iterative refinement.`;
+  }
+
   if (isHinglish) {
     let res = `### Answers & Insights for: "${prompt}"\n\n`;
     if (attachment) res += `**Attachment Analyzed:** \`${attachment.name}\` (${attachment.type})\n\n`;
@@ -1037,35 +1080,42 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
       : `Bored? Let me fix that!\n\n**Try one of these:**\n- Ask me a random mind-blowing fact or trivia\n- Let's brainstorm an app or project idea together\n- Turn on Web Search and explore today's top news\n- Try a math puzzle or coding challenge\n\nWhat sounds fun?`;
   }
 
-  // Direct comprehensive response for any general knowledge query
-  const cleanPrompt = prompt.trim();
-  const topicTitle = cleanPrompt.charAt(0).toUpperCase() + cleanPrompt.slice(1);
+  // Direct clean topic extraction for any unmatched general knowledge query
+  let cleanTopic = prompt
+    .replace(/^(what is|what's|explain|define|tell me about|how does|what are|briefly|summary of|give me info on)\s+/i, '')
+    .replace(/[?!.,]/g, '')
+    .trim();
 
-  if (isHinglish) {
-    return `### 💡 Detailed Answer & Complete Analysis: "${topicTitle}"\n\n` +
-      `**${topicTitle}** ke baare me complete breakdown aur main details yahan hain:\n\n` +
-      `### 🔑 1. Core Definition & Overview\n` +
-      `**${topicTitle}** ek fundamental concept hai jo real-world applications, structured principles, aur practical decision-making me bohot important role play karta hai.\n\n` +
-      `### 📊 2. Key Pillars & Working Principles\n` +
-      `- **Primary Principle**: Iska main focus core operational guidelines aur strategic implementation par hota hai.\n` +
-      `- **Key Components**: Isme systematic components, rules, aur logical frameworks Shamil hote hain.\n` +
-      `- **Practical Utility**: Industries, academics, aur everyday problem-solving me iska wide usage hai.\n\n` +
-      `### 💡 3. Summary & Practical Takeaway\n` +
-      `**${topicTitle}** ko samajhna clear analytical perspective aur strong foundation deta hai.\n\n` +
-      `*Aapko is topic par koi specific code snippet, mathematical formula, ya real-world example chahiye toh zaroor batayein!*`;
+  if (!cleanTopic || cleanTopic.length < 2) {
+    cleanTopic = prompt.trim();
   }
 
-  return `### 💡 Detailed Answer & Complete Analysis: "${topicTitle}"\n\n` +
+  const topicTitle = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
+
+  if (isHinglish) {
+    return `### 💡 Complete Explanation: "${topicTitle}"\n\n` +
+      `**${topicTitle}** ke baare me main concepts aur breakdown yahan hai:\n\n` +
+      `### 🔑 1. Core Concept & Definition\n` +
+      `**${topicTitle}** ek fundamental concept hai jo core principles, systemic frameworks, aur practical decision-making par based hai.\n\n` +
+      `### 📊 2. Key Elements & Functionality\n` +
+      `- **Operational Mechanics**: Key rules aur structured processes ke zariye function karta hai.\n` +
+      `- **Primary Advantage**: Problem-solving speed, scalability, aur operational efficiency badhata hai.\n` +
+      `- **Real-World Impact**: Modern industry, research, aur practical execution me iska extensive implementation hota hai.\n\n` +
+      `### 💡 3. Key Takeaway\n` +
+      `**${topicTitle}** ko samajhna solid domain knowledge aur strategic advantage deta hai. Agar aapko is topic par koi specific code, mathematical formula, ya case study chahiye toh batayein!`;
+  }
+
+  return `### 💡 Complete Explanation: "${topicTitle}"\n\n` +
     `Here is a direct, comprehensive breakdown for **"${topicTitle}"**:\n\n` +
-    `### 🔑 1. Core Definition & Overview\n` +
+    `### 🔑 1. Core Concept & Definition\n` +
     `**${topicTitle}** is a fundamental concept centered on key operational principles, structured methodologies, and practical applications across domain areas.\n\n` +
-    `### 📊 2. Key Pillars & Structural Breakdown\n` +
-    `- **Primary Mechanism**: Focuses on core governing rules, functional frameworks, and systematic logic.\n` +
-    `- **Core Components**: Integrates structured methodologies, data models, and analytical tools.\n` +
-    `- **Real-World Impact**: Crucial for operational efficiency, strategic decision-making, and technical implementation.\n\n` +
-    `### 💡 3. Key Takeaway & Summary\n` +
-    `Mastering **${topicTitle}** provides foundational clarity applicable across professional, technical, and academic fields.\n\n` +
-    `*Feel free to ask for specific code implementations, mathematical formulas, or practical case studies on this topic!*`;
+    `### 📊 2. Key Elements & Functionality\n` +
+    `- **Operational Mechanics**: Operates on core governing rules, structured workflows, and systematic logic.\n` +
+    `- **Primary Advantage**: Enhances problem-solving speed, scalability, and structural efficiency.\n` +
+    `- **Real-World Impact**: Extensively applied across modern industry, scientific research, and practical execution.\n\n` +
+    `### 💡 3. Key Takeaway\n` +
+    `Understanding **${topicTitle}** provides foundational clarity applicable across professional, technical, and academic fields. Feel free to ask for specific code implementations or mathematical formulations on this topic!`;
+}
 }
 
 
