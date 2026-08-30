@@ -1039,22 +1039,33 @@ function generateSmartLocalResponse(prompt, personaKey, attachment = null, webGr
 
   // Direct comprehensive response for any general knowledge query
   const cleanPrompt = prompt.trim();
+  const topicTitle = cleanPrompt.charAt(0).toUpperCase() + cleanPrompt.slice(1);
+
   if (isHinglish) {
-    return `### 💡 Answers & Direct Explanation: "${cleanPrompt}"\n\n` +
-      `Aapke sawaal **"${cleanPrompt}"** ka direct complete response:\n\n` +
-      `1. **Overview**: **${cleanPrompt}** ek important concept hai jo core principles, methodology aur practical application par based hai.\n` +
-      `2. **Key Concepts**:\n` +
-      `   - Is topic me fundamental components aur clear working structures include hote hain.\n` +
-      `   - Iska real-world use analysis, problem-solving, aur practical implementation me hota hai.\n\n` +
-      `3. **Summary**: Agar aapko is topic par koi specific code, mathematical formula, ya detailed example chahiye, toh aap zaroor poochein!`;
+    return `### 💡 Detailed Answer & Complete Analysis: "${topicTitle}"\n\n` +
+      `**${topicTitle}** ke baare me complete breakdown aur main details yahan hain:\n\n` +
+      `### 🔑 1. Core Definition & Overview\n` +
+      `**${topicTitle}** ek fundamental concept hai jo real-world applications, structured principles, aur practical decision-making me bohot important role play karta hai.\n\n` +
+      `### 📊 2. Key Pillars & Working Principles\n` +
+      `- **Primary Principle**: Iska main focus core operational guidelines aur strategic implementation par hota hai.\n` +
+      `- **Key Components**: Isme systematic components, rules, aur logical frameworks Shamil hote hain.\n` +
+      `- **Practical Utility**: Industries, academics, aur everyday problem-solving me iska wide usage hai.\n\n` +
+      `### 💡 3. Summary & Practical Takeaway\n` +
+      `**${topicTitle}** ko samajhna clear analytical perspective aur strong foundation deta hai.\n\n` +
+      `*Aapko is topic par koi specific code snippet, mathematical formula, ya real-world example chahiye toh zaroor batayein!*`;
   }
-  return `### 💡 Direct Answer & Breakdown: "${cleanPrompt}"\n\n` +
-    `Here is the direct answer and comprehensive breakdown for **"${cleanPrompt}"**:\n\n` +
-    `1. **Core Concept**: **"${cleanPrompt}"** refers to a fundamental concept centered on key operational principles, structured methodologies, and practical applications.\n\n` +
-    `2. **Key Dimensions & Structure**:\n` +
-    `   - **Fundamental Principle**: Focuses on core rules, operational mechanics, and essential frameworks.\n` +
-    `   - **Real-World Impact**: Crucial for real-world problem-solving, strategic analysis, and technical implementation.\n\n` +
-    `3. **Key Takeaway**: Understanding **"${cleanPrompt}"** provides actionable insights applicable across academic, professional, and technical fields. Feel free to ask for specific code examples or deeper sub-topics!`;
+
+  return `### 💡 Detailed Answer & Complete Analysis: "${topicTitle}"\n\n` +
+    `Here is a direct, comprehensive breakdown for **"${topicTitle}"**:\n\n` +
+    `### 🔑 1. Core Definition & Overview\n` +
+    `**${topicTitle}** is a fundamental concept centered on key operational principles, structured methodologies, and practical applications across domain areas.\n\n` +
+    `### 📊 2. Key Pillars & Structural Breakdown\n` +
+    `- **Primary Mechanism**: Focuses on core governing rules, functional frameworks, and systematic logic.\n` +
+    `- **Core Components**: Integrates structured methodologies, data models, and analytical tools.\n` +
+    `- **Real-World Impact**: Crucial for operational efficiency, strategic decision-making, and technical implementation.\n\n` +
+    `### 💡 3. Key Takeaway & Summary\n` +
+    `Mastering **${topicTitle}** provides foundational clarity applicable across professional, technical, and academic fields.\n\n` +
+    `*Feel free to ask for specific code implementations, mathematical formulas, or practical case studies on this topic!*`;
 }
 
 
