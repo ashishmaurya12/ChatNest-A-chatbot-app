@@ -1187,39 +1187,94 @@ button {
   color: #fafafa;
 }
 
-/* Streaming Blinking Cursor */
+/* Ultra-Modern Streaming Gradient Pulse Cursor (Replaces yellow block cursor) */
 .streaming-cursor::after {
-  content: '▋';
+  content: '';
   display: inline-block;
-  color: var(--arena-gold-bright);
-  animation: blink 1s steps(2, start) infinite;
-  margin-left: 2px;
+  width: 3px;
+  height: 1.15em;
+  vertical-align: text-bottom;
+  margin-left: 4px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.7), 0 0 4px rgba(168, 85, 247, 0.5);
+  animation: cursorGlowPulse 0.8s ease-in-out infinite alternate;
 }
 
-/* Typing pulse animation */
+@keyframes cursorGlowPulse {
+  0% {
+    opacity: 0.3;
+    transform: scaleY(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1.05);
+    box-shadow: 0 0 14px rgba(99, 102, 241, 0.9), 0 0 8px rgba(236, 72, 153, 0.8);
+  }
+}
+
+/* Typing / Thinking Indicator Animation */
 .typing-indicator-wrapper {
   max-width: 840px;
   width: 100%;
   margin: 0 auto;
 }
 
-.typing-pulse {
+.thinking-glow-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.1);
+}
+
+.ai-sparkle-spin {
+  animation: sparklePulseSpin 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes sparklePulseSpin {
+  0% { transform: scale(0.9) rotate(0deg); opacity: 0.75; }
+  50% { transform: scale(1.15) rotate(180deg); opacity: 1; filter: drop-shadow(0 0 6px #818cf8); }
+  100% { transform: scale(0.9) rotate(360deg); opacity: 0.75; }
+}
+
+.thinking-wave-bars {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0.25rem 0;
+  gap: 3px;
+  height: 14px;
 }
 
-.typing-pulse span {
-  width: 8px;
-  height: 8px;
-  background-color: var(--text-main);
-  border-radius: 50%;
-  animation: typingPulse 1.4s infinite ease-in-out both;
+.thinking-wave-bars .bar {
+  width: 3px;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #6366f1 0%, #a855f7 100%);
+  animation: waveBar 1.2s infinite ease-in-out;
 }
 
-.typing-pulse span:nth-child(1) { animation-delay: -0.32s; }
-.typing-pulse span:nth-child(2) { animation-delay: -0.16s; }
+.thinking-wave-bars .bar-1 { animation-delay: 0s; }
+.thinking-wave-bars .bar-2 { animation-delay: 0.2s; }
+.thinking-wave-bars .bar-3 { animation-delay: 0.4s; }
+.thinking-wave-bars .bar-4 { animation-delay: 0.6s; }
+
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+.thinking-text {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.02em;
+}
 
 /* --------------------------------------------------------------------------
    8. Arena.ai Input Container Box
