@@ -159,8 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail|googlemail)\.com$/i;
+
   async function performEmailGoogleLogin(emailStr) {
-    const cleanEmail = emailStr.toLowerCase();
+    const cleanEmail = (emailStr || '').toLowerCase().trim();
+    if (!GMAIL_REGEX.test(cleanEmail)) {
+      showAlert('Invalid Gmail address! Please enter a valid @gmail.com account (e.g. name@gmail.com).', 'danger');
+      return;
+    }
+
     const userName = cleanEmail.split('@')[0].replace(/[^a-zA-Z]/g, ' ').trim() || 'Google User';
     hideAlert();
     setSubmitting(true);

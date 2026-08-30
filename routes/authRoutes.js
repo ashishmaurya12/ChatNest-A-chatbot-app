@@ -14,6 +14,9 @@ const generateToken = (user) => {
   );
 };
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@(gmail|googlemail)\.com$/i;
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public
@@ -25,20 +28,24 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please provide name, email, and password.' });
     }
 
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ success: false, error: 'Invalid email format. Please enter a valid email address.' });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
       return res.status(400).json({ success: false, error: 'An account with this email already exists.' });
     }
 
     // Create user
     const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password
     });
 
@@ -70,7 +77,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please provide email and password.' });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!EMAIL_REGEX.test(email.trim())) {
+      return res.status(400).json({ success: false, error: 'Invalid email format.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       return res.status(400).json({ success: false, error: 'Invalid credentials. User not found.' });
     }
@@ -104,8 +115,8 @@ router.post('/google', async (req, res) => {
   try {
     const { credential, email, name } = req.body;
 
-    let targetEmail = (email || '').toLowerCase();
-    let targetName = name || 'Google User';
+    let targetEmail = (email || '').trim().toLowerCase();
+    let targetName = (name || '').trim() || 'Google User';
 
     // If Google ID token credential was sent, decode payload
     if (credential) {
@@ -119,15 +130,15 @@ router.post('/google', async (req, res) => {
             .join('')
         );
         const payload = JSON.parse(jsonPayload);
-        if (payload.email) targetEmail = payload.email.toLowerCase();
+        if (payload.email) targetEmail = payload.email.trim().toLowerCase();
         if (payload.name) targetName = payload.name;
       } catch (e) {
         console.warn('[Google Token Decode Warning]:', e.message);
       }
     }
 
-    if (!targetEmail) {
-      return res.status(400).json({ success: false, error: 'Google email is required.' });
+    if (!targetEmail || !GMAIL_REGEX.test(targetEmail)) {
+      return res.status(400).json({ success: false, error: 'Invalid Gmail address. Please enter a valid @gmail.com account.' });
     }
 
     // Find or create user
