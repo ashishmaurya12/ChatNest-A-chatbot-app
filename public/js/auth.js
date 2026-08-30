@@ -168,11 +168,38 @@ document.addEventListener('DOMContentLoaded', () => {
           showAlert(data.error || 'Google authentication failed.', 'danger');
           setSubmitting(false);
         }
+  // Initialize Google Identity One-Tap Prompt
+  function setupGoogleOneTap() {
+    if (window.google && window.google.accounts) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: '9876543210-chatnest.apps.googleusercontent.com',
+          auto_select: false,
+          callback: async (response) => {
+            if (response && response.credential) {
+              hideAlert();
+              setSubmitting(true);
+              const res = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+              });
+              const data = await res.json();
+              if (data.success) {
+                setAuthToken(data.token);
+                setStoredUser(data.user);
+                showAlert(`Signed in as ${data.user.email}! Redirecting...`, 'success');
+                setTimeout(() => { window.location.href = 'chat.html'; }, 800);
+              }
+            }
+          }
+        });
+        window.google.accounts.id.prompt();
       } catch (e) {
-        console.error('Google Auth Error:', e);
-        showAlert('Network error during Google authentication.', 'danger');
-        setSubmitting(false);
+        console.warn('[Google One-Tap Warning]:', e);
       }
-    });
+    }
   }
+
+  setTimeout(setupGoogleOneTap, 600);
 });
