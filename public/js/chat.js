@@ -1256,9 +1256,7 @@ document.addEventListener('DOMContentLoaded', () => {
       coding: 'Coding Expert',
       study: 'Study Tutor',
       creative: 'Creative',
-      concise: 'Rapid Concise',
-      uncensored: 'Unfiltered AI',
-      unfiltered: 'Unfiltered AI'
+      concise: 'Rapid Concise'
     };
     return map[key] || 'General';
   }
